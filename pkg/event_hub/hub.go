@@ -1,21 +1,21 @@
-package bus
+package event_hub
 
 import (
 	"context"
 	"github.com/a-inacio/rosetta-logger-go/pkg/logger"
 	"github.com/a-inacio/rosetta-logger-go/pkg/rosetta"
 	"reflect"
-	"sync"
 )
 
-type Hub struct {
-	mu            sync.Mutex
-	l             logger.Logger
-	subscriptions map[string]handlers
-}
+func NewHub(config *HubConfig) *Hub {
+	logger := rosetta.NewLogger(logger.NullLoggerType)
 
-func NewHub() *Hub {
-	return &Hub{subscriptions: make(map[string]handlers), l: rosetta.NewLogger(logger.NullLoggerType)}
+	if config != nil {
+		if config.Logger != nil {
+			logger = config.Logger
+		}
+	}
+	return &Hub{subscriptions: make(map[string]handlers), l: logger}
 }
 
 func (h *Hub) Subscribe(event interface{}, handler EventHandler) {
@@ -85,12 +85,4 @@ func (h *Hub) Publish(event interface{}, ctx context.Context) {
 			}
 		}()
 	}
-}
-
-type EventHandler interface {
-	Handler(ctx context.Context, event interface{}) error
-}
-
-type handlers struct {
-	callbacks []EventHandler
 }
