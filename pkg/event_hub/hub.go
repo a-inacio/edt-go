@@ -5,6 +5,7 @@ import (
 	"github.com/a-inacio/rosetta-logger-go/pkg/logger"
 	"github.com/a-inacio/rosetta-logger-go/pkg/rosetta"
 	"reflect"
+	"sync"
 )
 
 func NewHub(config *HubConfig) *Hub {
@@ -57,9 +58,10 @@ func (h *Hub) Unsubscribe(event interface{}, handler EventHandler) {
 	h.mu.Unlock()
 }
 
-func (h *Hub) Publish(event interface{}, ctx context.Context) {
+func (h *Hub) Publish(event interface{}, ctx context.Context) *sync.WaitGroup {
 	log := h.l
 	typeName := reflect.TypeOf(event).Name()
+	var wg sync.WaitGroup
 
 	var callbacks []EventHandler
 
@@ -73,16 +75,21 @@ func (h *Hub) Publish(event interface{}, ctx context.Context) {
 	h.mu.Unlock()
 
 	if callbacks == nil {
-		return
+		return &wg
 	}
+
+	wg.Add(len(callbacks))
 
 	for _, value := range callbacks {
 		callback := value // capture the value for the closure!
 		go func() {
+			defer wg.Done()
 			err := callback.Handler(ctx, event)
 			if err != nil {
 				log.Warn("Event handler failed", "reason", err)
 			}
 		}()
 	}
+
+	return &wg
 }
