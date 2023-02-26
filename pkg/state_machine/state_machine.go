@@ -2,11 +2,16 @@ package state_machine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 )
 
-func NewStateMachine(initialState *State, ctx context.Context) *StateMachine {
+func NewStateMachine(initialState *State, ctx context.Context) (*StateMachine, error) {
+	if initialState.Name == "" {
+		return nil, errors.New("state name cannot be empty")
+	}
+
 	return &StateMachine{
 		nodes: map[string]Node{
 			initialState.Name: {
@@ -16,11 +21,19 @@ func NewStateMachine(initialState *State, ctx context.Context) *StateMachine {
 			},
 		},
 		context: ctx,
-		current: initialState.Name,
-	}
+		initial: initialState.Name,
+	}, nil
+}
+
+func (sm *StateMachine) IsRunning() bool {
+	return sm.current != ""
 }
 
 func (sm *StateMachine) AddState(state *State) error {
+	if state.Name == "" {
+		return errors.New("state name cannot be empty")
+	}
+
 	if _, alreadyAdded := sm.nodes[state.Name]; alreadyAdded {
 		return fmt.Errorf("state already added %s", state.Name)
 	}
@@ -60,6 +73,10 @@ func (sm *StateMachine) AddTransition(fromStateName string, event Event, toState
 }
 
 func (sm *StateMachine) TriggerEvent(event Event) error {
+	if !sm.IsRunning() {
+		return fmt.Errorf("state machine not started")
+	}
+
 	currentNode := sm.currentNode()
 
 	eventName := reflect.TypeOf(event).Name()
@@ -75,17 +92,25 @@ func (sm *StateMachine) TriggerEvent(event Event) error {
 		Event:     &event,
 	}
 
-	if currentNode.State.OnAfter != nil {
-		currentNode.State.OnAfter(sm.context, trigger)
+	sm.executeTransition(&currentNode, &trigger, &transition)
+
+	return nil
+}
+
+func (sm *StateMachine) Start() error {
+	if sm.IsRunning() {
+		return fmt.Errorf("state machine already runnig at state: %s", sm.current)
 	}
 
-	if transition.To.State.OnBefore != nil {
-		currentNode.State.OnBefore(sm.context, trigger)
+	initialNode := sm.nodes[sm.initial]
+	trigger := Trigger{
+		ToState: initialNode.State,
 	}
 
-	if transition.To.State.OnEnter != nil {
-		currentNode.State.OnEnter(sm.context, trigger)
-	}
+	sm.executeTransition(nil, &trigger, &Transition{
+		To:        &initialNode,
+		EventName: "__start__",
+	})
 
 	return nil
 }
@@ -94,3 +119,20 @@ func (sm *StateMachine) currentNode() Node {
 	return sm.nodes[sm.current]
 }
 
+func (sm *StateMachine) executeTransition(currentNode *Node, trigger *Trigger, transition *Transition) {
+	if currentNode != nil {
+		if currentNode.State.OnAfter != nil {
+			currentNode.State.OnAfter(sm.context, *trigger)
+		}
+	}
+
+	sm.current = transition.To.State.Name
+
+	if transition.To.State.OnBefore != nil {
+		transition.To.State.OnBefore(sm.context, *trigger)
+	}
+
+	if transition.To.State.OnEnter != nil {
+		transition.To.State.OnEnter(sm.context, *trigger)
+	}
+}

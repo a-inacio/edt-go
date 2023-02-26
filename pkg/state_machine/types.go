@@ -42,4 +42,5 @@ type StateMachine struct {
 	nodes   map[string]Node
 	context context.Context
 	current string
+	initial string
 }
