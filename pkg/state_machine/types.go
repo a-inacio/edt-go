@@ -1,6 +1,8 @@
 package state_machine
 
-import "context"
+import (
+	"context"
+)
 
 type Event interface{}
 
@@ -43,4 +45,17 @@ type StateMachine struct {
 	context context.Context
 	current string
 	initial string
+}
+
+type transitionBuilder struct {
+	from  string
+	to    string
+	event Event
+}
+
+type StateMachineBuilder struct {
+	initialState *State
+	states       []*State
+	transitions  []transitionBuilder
+	context      context.Context
 }
