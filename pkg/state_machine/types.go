@@ -53,9 +53,16 @@ type transitionBuilder struct {
 	event Event
 }
 
+type eventBuilder struct {
+	state string
+	event Event
+}
+
 type StateMachineBuilder struct {
 	initialState *State
 	states       []*State
 	transitions  []transitionBuilder
+	graph        string
+	events       []eventBuilder
 	context      context.Context
 }

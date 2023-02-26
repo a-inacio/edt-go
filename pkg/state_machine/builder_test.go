@@ -109,3 +109,81 @@ func TestStateMachine_TriggerEvent_FromBuilder(t *testing.T) {
 		t.Error("C State, should be possible to transition to D")
 	}
 }
+
+func TestStateMachine_TriggerEvent_FromBuilder_WithGraph(t *testing.T) {
+	onAfterCalledA := false
+	onBeforeCalledB := false
+	onEnterCalledB := false
+
+	type GoToB struct {
+	}
+
+	type GoToC struct {
+	}
+
+	type GoToD struct {
+	}
+
+	sm, _ := NewBuilder().
+		WithInitialState(&State{
+			Name: "A",
+			OnAfter: func(ctx context.Context, trigger Trigger) {
+				onAfterCalledA = true
+			},
+		}).
+		WithContext(context.Background()).
+		AddState(&State{
+			Name: "B",
+			OnBefore: func(ctx context.Context, trigger Trigger) {
+				onBeforeCalledB = true
+			},
+			OnEnter: func(ctx context.Context, trigger Trigger) {
+				onEnterCalledB = true
+			},
+		}).
+		AddState(&State{
+			Name: "C",
+		}).
+		AddState(&State{
+			Name: "D",
+		}).
+		WithEvents(GoToB{}, GoToC{}, GoToD{}).
+		FromGraph(`
+			[*] --> A
+			A --> B
+			B --> C
+			C --> D
+			D --> [*]
+		`).
+		Build()
+
+	sm.Start()
+	sm.TriggerEvent(GoToB{})
+
+	if !onAfterCalledA {
+		t.Error("A State, OnAfter should have been called")
+	}
+
+	if !onBeforeCalledB {
+		t.Error("B State, OnBefore should have been called")
+	}
+
+	if !onEnterCalledB {
+		t.Error("B State, OnEnter should have been called")
+	}
+
+	err := sm.TriggerEvent(GoToD{})
+	if err == nil {
+		t.Error("B State, should not be possible to transition to D")
+	}
+
+	err = sm.TriggerEvent(GoToC{})
+	if err != nil {
+		t.Error("B State, should be possible to transition to C")
+	}
+
+	err = sm.TriggerEvent(GoToD{})
+	if err != nil {
+		t.Error("C State, should be possible to transition to D")
+	}
+}
