@@ -2,9 +2,9 @@ package event_hub
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/rosetta-logger-go/pkg/logger"
 	"github.com/a-inacio/rosetta-logger-go/pkg/rosetta"
-	"reflect"
 	"sync"
 )
 
@@ -19,28 +19,28 @@ func NewHub(config *HubConfig) *Hub {
 	return &Hub{subscriptions: make(map[string]handlers), l: logger}
 }
 
-func (h *Hub) Subscribe(event interface{}, handler EventHandler) {
-	typeName := reflect.TypeOf(event).Name()
+func (h *Hub) Subscribe(e event.Event, handler EventHandler) {
+	eventName := event.GetName(e)
 
 	h.mu.Lock()
 
-	subscriptions, contains := h.subscriptions[typeName]
+	subscriptions, contains := h.subscriptions[eventName]
 	if !contains {
 		subscriptions = handlers{callbacks: make([]EventHandler, 0)}
 	}
 
 	subscriptions.callbacks = append(subscriptions.callbacks, handler)
-	h.subscriptions[typeName] = subscriptions
+	h.subscriptions[eventName] = subscriptions
 
 	h.mu.Unlock()
 }
 
-func (h *Hub) Unsubscribe(event interface{}, handler EventHandler) {
-	typeName := reflect.TypeOf(event).Name()
+func (h *Hub) Unsubscribe(e event.Event, handler EventHandler) {
+	eventName := event.GetName(e)
 
 	h.mu.Lock()
 
-	subscriptions, contains := h.subscriptions[typeName]
+	subscriptions, contains := h.subscriptions[eventName]
 	if contains && len(subscriptions.callbacks) > 0 {
 		callbacks := subscriptions.callbacks
 
@@ -52,22 +52,23 @@ func (h *Hub) Unsubscribe(event interface{}, handler EventHandler) {
 		}
 
 		subscriptions.callbacks = callbacks
-		h.subscriptions[typeName] = subscriptions
+		h.subscriptions[eventName] = subscriptions
 	}
 
 	h.mu.Unlock()
 }
 
-func (h *Hub) Publish(event interface{}, ctx context.Context) *sync.WaitGroup {
+func (h *Hub) Publish(e event.Event, ctx context.Context) *sync.WaitGroup {
 	log := h.l
-	typeName := reflect.TypeOf(event).Name()
+	eventName := event.GetName(e)
+
 	var wg sync.WaitGroup
 
 	var callbacks []EventHandler
 
 	h.mu.Lock()
 
-	subscriptions, contains := h.subscriptions[typeName]
+	subscriptions, contains := h.subscriptions[eventName]
 	if contains && len(subscriptions.callbacks) > 0 {
 		callbacks = subscriptions.callbacks
 	}
@@ -84,7 +85,7 @@ func (h *Hub) Publish(event interface{}, ctx context.Context) *sync.WaitGroup {
 		callback := value // capture the value for the closure!
 		go func() {
 			defer wg.Done()
-			err := callback.Handler(ctx, event)
+			err := callback.Handler(ctx, e)
 			if err != nil {
 				log.Warn("Event handler failed", "reason", err)
 			}

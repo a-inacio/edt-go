@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"reflect"
 )
 
 func NewStateMachine(initialState *State, ctx context.Context) (*StateMachine, error) {
@@ -48,8 +47,8 @@ func (sm *StateMachine) AddState(state *State) error {
 	return nil
 }
 
-func (sm *StateMachine) AddTransition(fromStateName string, event event.Event, toStateName string) error {
-	eventName := reflect.TypeOf(event).Name()
+func (sm *StateMachine) AddTransition(fromStateName string, e event.Event, toStateName string) error {
+	eventName := event.GetName(e)
 
 	fromNode, ok := sm.nodes[fromStateName]
 	if !ok {
@@ -73,14 +72,14 @@ func (sm *StateMachine) AddTransition(fromStateName string, event event.Event, t
 	return nil
 }
 
-func (sm *StateMachine) TriggerEvent(event event.Event) error {
+func (sm *StateMachine) TriggerEvent(e event.Event) error {
 	if !sm.IsRunning() {
 		return fmt.Errorf("state machine not started")
 	}
 
 	currentNode := sm.currentNode()
 
-	eventName := reflect.TypeOf(event).Name()
+	eventName := event.GetName(e)
 
 	transition, exists := currentNode.Transitions[eventName]
 	if !exists {
@@ -90,7 +89,7 @@ func (sm *StateMachine) TriggerEvent(event event.Event) error {
 	trigger := Trigger{
 		FromState: currentNode.State,
 		ToState:   transition.To.State,
-		Event:     &event,
+		Event:     &e,
 	}
 
 	sm.executeTransition(&currentNode, &trigger, &transition)
