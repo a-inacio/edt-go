@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/a-inacio/edt-go/internal/mermaid"
 	"github.com/a-inacio/edt-go/pkg/event"
+	"github.com/a-inacio/edt-go/pkg/event_hub"
 	"strings"
 )
 
@@ -19,6 +20,11 @@ func (builder *StateMachineBuilder) WithInitialState(initialState *State) *State
 
 func (builder *StateMachineBuilder) WithContext(ctx context.Context) *StateMachineBuilder {
 	builder.context = ctx
+	return builder
+}
+
+func (builder *StateMachineBuilder) SubscribeFrom(hub *event_hub.Hub) *StateMachineBuilder {
+	builder.hub = hub
 	return builder
 }
 
@@ -111,6 +117,8 @@ func (builder *StateMachineBuilder) Build() (*StateMachine, error) {
 
 			err = stateMachine.AddTransition(node.From, e, node.To)
 
+			builder.trySubscribeFromHub(e, stateMachine)
+
 			if err != nil {
 				return nil, err
 			}
@@ -123,6 +131,8 @@ func (builder *StateMachineBuilder) Build() (*StateMachine, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		builder.trySubscribeFromHub(t.event, stateMachine)
 	}
 
 	return stateMachine, err
@@ -161,4 +171,12 @@ func (builder *StateMachineBuilder) eventReferenceTable() (map[string]event.Even
 	}
 
 	return table, nil
+}
+
+func (builder *StateMachineBuilder) trySubscribeFromHub(e event.Event, sm *StateMachine) {
+	if builder.hub == nil {
+		return
+	}
+
+	builder.hub.Subscribe(e, &stateMachineHubHandler{sm: sm})
 }

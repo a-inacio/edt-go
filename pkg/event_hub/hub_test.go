@@ -19,10 +19,10 @@ type SomeEventHandler struct {
 	GotCalled bool
 }
 
-func (h *SomeEventHandler) Handler(ctx context.Context, event interface{}) error {
+func (h *SomeEventHandler) Handler(ctx context.Context, e event.Event) error {
 	h.GotCalled = true
 
-	if event.(SomeEvent).ShouldFail {
+	if e.(SomeEvent).ShouldFail {
 		return errors.New("I was asked to fail")
 	}
 
@@ -34,7 +34,7 @@ type SomeGenericEventHandler struct {
 	Message   string
 }
 
-func (h *SomeGenericEventHandler) Handler(ctx context.Context, e interface{}) error {
+func (h *SomeGenericEventHandler) Handler(ctx context.Context, e event.Event) error {
 	h.GotCalled = true
 
 	values := e.(event.GenericNamedEvent).Values

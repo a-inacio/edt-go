@@ -3,6 +3,7 @@ package state_machine
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/event"
+	"github.com/a-inacio/edt-go/pkg/event_hub"
 	"testing"
 )
 
@@ -319,5 +320,66 @@ func TestStateMachine_TriggerEvent_FromBuilder_WithGraph_WithGenericEvents(t *te
 	err = sm.TriggerEvent(event.WithName("GoToD"))
 	if err != nil {
 		t.Error("C State, should be possible to transition to D")
+	}
+}
+
+func TestStateMachine_TriggerEvent_FromBuilder_WithHub(t *testing.T) {
+	onAfterCalledA := false
+	onBeforeCalledB := false
+	onEnterCalledB := false
+
+	type GoToB struct {
+	}
+
+	type GoToC struct {
+	}
+
+	type GoToD struct {
+	}
+
+	hub := event_hub.NewHub(nil)
+
+	sm, _ := NewBuilder().
+		WithInitialState(&State{
+			Name: "A",
+			OnAfter: func(ctx context.Context, trigger Trigger) {
+				onAfterCalledA = true
+			},
+		}).
+		WithContext(context.Background()).
+		AddState(&State{
+			Name: "B",
+			OnBefore: func(ctx context.Context, trigger Trigger) {
+				onBeforeCalledB = true
+			},
+			OnEnter: func(ctx context.Context, trigger Trigger) {
+				onEnterCalledB = true
+			},
+		}).
+		AddState(&State{
+			Name: "C",
+		}).
+		AddState(&State{
+			Name: "D",
+		}).
+		AddTransition("A", GoToB{}, "B").
+		AddTransition("B", GoToC{}, "C").
+		AddTransition("C", GoToD{}, "D").
+		SubscribeFrom(hub).
+		Build()
+
+	sm.Start()
+	hub.Publish(GoToB{}, nil).Wait()
+
+	if !onAfterCalledA {
+		t.Error("A State, OnAfter should have been called")
+	}
+
+	if !onBeforeCalledB {
+		t.Error("B State, OnBefore should have been called")
+	}
+
+	if !onEnterCalledB {
+		t.Error("B State, OnEnter should have been called")
 	}
 }

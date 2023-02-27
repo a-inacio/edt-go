@@ -2,6 +2,7 @@ package event_hub
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/rosetta-logger-go/pkg/logger"
 	"sync"
 )
@@ -17,7 +18,7 @@ type HubConfig struct {
 }
 
 type EventHandler interface {
-	Handler(ctx context.Context, event interface{}) error
+	Handler(ctx context.Context, e event.Event) error
 }
 
 type handlers struct {
