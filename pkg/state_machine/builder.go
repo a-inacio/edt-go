@@ -104,12 +104,12 @@ func (builder *StateMachineBuilder) Build() (*StateMachine, error) {
 				continue
 			}
 
-			event, ok := refTable[node.To]
+			e, ok := refTable[node.To]
 			if !ok {
 				return nil, fmt.Errorf("no transition event defined for %s --> %s", node.From, node.To)
 			}
 
-			err = stateMachine.AddTransition(node.From, event, node.To)
+			err = stateMachine.AddTransition(node.From, e, node.To)
 
 			if err != nil {
 				return nil, err
