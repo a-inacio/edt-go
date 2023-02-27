@@ -217,13 +217,13 @@ func TestStateMachine_TriggerEvent_FromBuilder_WithGenericEvents(t *testing.T) {
 		AddState(&State{
 			Name: "D",
 		}).
-		AddTransition("A", event.WithName("GoToB"), "B").
-		AddTransition("B", event.WithName("GoToC"), "C").
-		AddTransition("C", event.WithName("GoToD"), "D").
+		AddTransition("A", event.WithName("SomethingGoingToB"), "B").
+		AddTransition("B", event.WithName("SomethingGoingToC"), "C").
+		AddTransition("C", event.WithName("SomethingGoingToD"), "D").
 		Build()
 
 	sm.Start()
-	sm.TriggerEvent(event.WithName("GoToB"))
+	sm.TriggerEvent(event.WithName("SomethingGoingToB"))
 
 	if !onAfterCalledA {
 		t.Error("A State, OnAfter should have been called")
@@ -237,17 +237,17 @@ func TestStateMachine_TriggerEvent_FromBuilder_WithGenericEvents(t *testing.T) {
 		t.Error("B State, OnEnter should have been called")
 	}
 
-	err := sm.TriggerEvent(event.WithName("GoToD"))
+	err := sm.TriggerEvent(event.WithName("SomethingGoingToD"))
 	if err == nil {
 		t.Error("B State, should not be possible to transition to D")
 	}
 
-	err = sm.TriggerEvent(event.WithName("GoToC"))
+	err = sm.TriggerEvent(event.WithName("SomethingGoingToC"))
 	if err != nil {
 		t.Error("B State, should be possible to transition to C")
 	}
 
-	err = sm.TriggerEvent(event.WithName("GoToD"))
+	err = sm.TriggerEvent(event.WithName("SomethingGoingToD"))
 	if err != nil {
 		t.Error("C State, should be possible to transition to D")
 	}
