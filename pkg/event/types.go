@@ -7,3 +7,7 @@ type Event interface{}
 type NamedEvent interface {
 	EventName() string
 }
+
+type GenericNamedEvent struct {
+	name string
+}

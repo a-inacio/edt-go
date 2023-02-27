@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/a-inacio/edt-go/internal/mermaid"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"reflect"
 	"strings"
 )
 
@@ -27,6 +26,16 @@ func (builder *StateMachineBuilder) WithEvents(events ...event.Event) *StateMach
 	for _, e := range events {
 		builder.events = append(builder.events, eventBuilder{
 			event: e,
+		})
+	}
+
+	return builder
+}
+
+func (builder *StateMachineBuilder) WithEventNames(names ...string) *StateMachineBuilder {
+	for _, n := range names {
+		builder.events = append(builder.events, eventBuilder{
+			name: n,
 		})
 	}
 
@@ -124,7 +133,16 @@ func (builder *StateMachineBuilder) eventReferenceTable() (map[string]event.Even
 
 	for _, e := range builder.events {
 		state := e.state
-		eventName := reflect.TypeOf(e.event).Name()
+		var eventName string
+		var eventInstance event.Event
+
+		if e.name == "" {
+			eventName = event.GetName(e.event)
+			eventInstance = e.event
+		} else {
+			eventName = e.name
+			eventInstance = event.WithName(eventName)
+		}
 
 		if state == "" {
 
@@ -139,7 +157,7 @@ func (builder *StateMachineBuilder) eventReferenceTable() (map[string]event.Even
 			return nil, fmt.Errorf("state %s already has a transition event %s", state, eventName)
 		}
 
-		table[state] = e.event
+		table[state] = eventInstance
 	}
 
 	return table, nil

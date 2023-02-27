@@ -55,6 +55,7 @@ type transitionBuilder struct {
 type eventBuilder struct {
 	state string
 	event event.Event
+	name  string
 }
 
 type StateMachineBuilder struct {

@@ -67,6 +67,27 @@ func TestEventGetName(t *testing.T) {
 			},
 			want: "SomethingElsePointy",
 		},
+		{
+			name: "generic events should work",
+			args: args{
+				event: GenericNamedEvent{name: "GenericName"},
+			},
+			want: "GenericName",
+		},
+		{
+			name: "pointers to generic events should work",
+			args: args{
+				event: &GenericNamedEvent{name: "GenericName"},
+			},
+			want: "GenericName",
+		},
+		{
+			name: "using WithName should work",
+			args: args{
+				event: WithName("FromWithName"),
+			},
+			want: "FromWithName",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

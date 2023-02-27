@@ -40,3 +40,7 @@ func GetName(event Event) string {
 
 	return t.Name()
 }
+
+func WithName(name string) *GenericNamedEvent {
+	return &GenericNamedEvent{name: name}
+}
