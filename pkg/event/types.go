@@ -9,5 +9,6 @@ type NamedEvent interface {
 }
 
 type GenericNamedEvent struct {
-	name string
+	name   string
+	Values map[string]interface{}
 }

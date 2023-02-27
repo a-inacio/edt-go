@@ -1,6 +1,7 @@
 package event
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -43,4 +44,15 @@ func GetName(event Event) string {
 
 func WithName(name string) *GenericNamedEvent {
 	return &GenericNamedEvent{name: name}
+}
+
+func WithNameAndKeyValues(name string, kv ...interface{}) *GenericNamedEvent {
+	m := make(map[string]interface{})
+	for i := 0; i < len(kv); i += 2 {
+		key := fmt.Sprintf("%v", kv[i])
+		value := kv[i+1]
+		m[key] = value
+	}
+
+	return &GenericNamedEvent{name: name, Values: m}
 }
