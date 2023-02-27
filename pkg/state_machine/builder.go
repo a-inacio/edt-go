@@ -3,7 +3,8 @@ package state_machine
 import (
 	"context"
 	"fmt"
-	"github.com/a-inacio/edt-go/pkg/state_machine/mermaid"
+	"github.com/a-inacio/edt-go/internal/mermaid"
+	"github.com/a-inacio/edt-go/pkg/event"
 	"reflect"
 	"strings"
 )
@@ -22,7 +23,7 @@ func (builder *StateMachineBuilder) WithContext(ctx context.Context) *StateMachi
 	return builder
 }
 
-func (builder *StateMachineBuilder) WithEvents(events ...Event) *StateMachineBuilder {
+func (builder *StateMachineBuilder) WithEvents(events ...event.Event) *StateMachineBuilder {
 	for _, e := range events {
 		builder.events = append(builder.events, eventBuilder{
 			event: e,
@@ -32,7 +33,7 @@ func (builder *StateMachineBuilder) WithEvents(events ...Event) *StateMachineBui
 	return builder
 }
 
-func (builder *StateMachineBuilder) WithEventForEntering(state string, event Event) *StateMachineBuilder {
+func (builder *StateMachineBuilder) WithEventForEntering(state string, event event.Event) *StateMachineBuilder {
 	builder.events = append(builder.events, eventBuilder{
 		state: state,
 		event: event,
@@ -52,7 +53,7 @@ func (builder *StateMachineBuilder) AddState(state *State) *StateMachineBuilder 
 	return builder
 }
 
-func (builder *StateMachineBuilder) AddTransition(from string, event Event, to string) *StateMachineBuilder {
+func (builder *StateMachineBuilder) AddTransition(from string, event event.Event, to string) *StateMachineBuilder {
 	builder.transitions = append(builder.transitions, transitionBuilder{
 		from:  from,
 		event: event,
@@ -118,8 +119,8 @@ func (builder *StateMachineBuilder) Build() (*StateMachine, error) {
 	return stateMachine, err
 }
 
-func (builder *StateMachineBuilder) eventReferenceTable() (map[string]Event, error) {
-	table := map[string]Event{}
+func (builder *StateMachineBuilder) eventReferenceTable() (map[string]event.Event, error) {
+	table := map[string]event.Event{}
 
 	for _, e := range builder.events {
 		state := e.state

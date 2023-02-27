@@ -2,9 +2,8 @@ package state_machine
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/event"
 )
-
-type Event interface{}
 
 type State struct {
 	Name     string
@@ -14,7 +13,7 @@ type State struct {
 }
 
 type Trigger struct {
-	Event     *Event
+	Event     *event.Event
 	FromState *State
 	ToState   *State
 }
@@ -50,12 +49,12 @@ type StateMachine struct {
 type transitionBuilder struct {
 	from  string
 	to    string
-	event Event
+	event event.Event
 }
 
 type eventBuilder struct {
 	state string
-	event Event
+	event event.Event
 }
 
 type StateMachineBuilder struct {

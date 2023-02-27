@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/a-inacio/edt-go/pkg/event"
 	"reflect"
 )
 
@@ -47,7 +48,7 @@ func (sm *StateMachine) AddState(state *State) error {
 	return nil
 }
 
-func (sm *StateMachine) AddTransition(fromStateName string, event Event, toStateName string) error {
+func (sm *StateMachine) AddTransition(fromStateName string, event event.Event, toStateName string) error {
 	eventName := reflect.TypeOf(event).Name()
 
 	fromNode, ok := sm.nodes[fromStateName]
@@ -72,7 +73,7 @@ func (sm *StateMachine) AddTransition(fromStateName string, event Event, toState
 	return nil
 }
 
-func (sm *StateMachine) TriggerEvent(event Event) error {
+func (sm *StateMachine) TriggerEvent(event event.Event) error {
 	if !sm.IsRunning() {
 		return fmt.Errorf("state machine not started")
 	}
