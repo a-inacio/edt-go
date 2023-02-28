@@ -22,6 +22,7 @@ type Expirable struct {
 
 type Builder struct {
 	timeout   time.Duration
+	delay     time.Duration
 	operation func(ctx context.Context) (interface{}, error)
 	hooks     Hooks
 }
