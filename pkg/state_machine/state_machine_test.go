@@ -2,7 +2,9 @@ package state_machine
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/awaitable"
 	"testing"
+	"time"
 )
 
 func TestNewStateMachine(t *testing.T) {
@@ -107,5 +109,41 @@ func TestStateMachine_TriggerEvent(t *testing.T) {
 	err = sm.TriggerEvent(GoToD{})
 	if err != nil {
 		t.Error("C State, should be possible to transition to D")
+	}
+}
+
+func TestNewStateMachine_Cancellation(t *testing.T) {
+	onBeforeCalled := false
+	onEnterCalled := false
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	initialState := &State{
+		Name: "Initial",
+		OnBefore: func(ctx context.Context, trigger Trigger) {
+			onBeforeCalled = true
+		},
+		OnEnter: func(ctx context.Context, trigger Trigger) {
+			awaitable.RunAfter(ctx, 5*time.Second, func() (any, error) {
+				onEnterCalled = true
+				return nil, nil
+			})
+		},
+	}
+	sm, err := NewStateMachine(initialState, ctx)
+
+	if err != nil {
+		t.Error("Creating the state machine should not have failed")
+	}
+
+	sm.Start()
+
+	if !onBeforeCalled {
+		t.Error("Initial State, OnBefore should have been called")
+	}
+
+	if onEnterCalled {
+		t.Error("Initial State, OnEnter should have not been called")
 	}
 }
