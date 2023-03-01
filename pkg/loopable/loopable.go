@@ -6,9 +6,15 @@ import (
 	"time"
 )
 
-func RunForever(ctx context.Context, delay time.Duration, a action.Action) (action.Result, error) {
+func RunForever(ctx context.Context, delay time.Duration, actions ...action.Action) (action.Result, error) {
 	for {
-		a(ctx)
+		for _, a := range actions {
+			a(ctx)
+
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
+		}
 
 		select {
 		case <-time.After(delay):
