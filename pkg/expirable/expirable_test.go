@@ -2,6 +2,7 @@ package expirable
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/awaitable"
 	"testing"
 	"time"
@@ -9,7 +10,7 @@ import (
 
 func TestExpirable_Expect42(t *testing.T) {
 	res, err := NewBuilder().
-		FromOperation(func(ctx context.Context) (interface{}, error) {
+		FromOperation(func(ctx context.Context) (action.Result, error) {
 			return 42, nil
 		}).
 		WithTimeout(2 * time.Second).
@@ -26,8 +27,8 @@ func TestExpirable_Expect42(t *testing.T) {
 
 func TestExpirable_ExpectTimeout(t *testing.T) {
 	res, err := NewBuilder().
-		FromOperation(func(ctx context.Context) (interface{}, error) {
-			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (any, error) {
+		FromOperation(func(ctx context.Context) (action.Result, error) {
+			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).
@@ -45,8 +46,8 @@ func TestExpirable_ExpectTimeout(t *testing.T) {
 
 func TestExpirable_ShouldNotTimeout(t *testing.T) {
 	res, err := NewBuilder().
-		FromOperation(func(ctx context.Context) (interface{}, error) {
-			return awaitable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (any, error) {
+		FromOperation(func(ctx context.Context) (action.Result, error) {
+			return awaitable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).
@@ -69,10 +70,10 @@ func TestExpirable_ExpectCancellation(t *testing.T) {
 	operationCalled := false
 
 	res, err := NewBuilder().
-		FromOperation(func(ctx context.Context) (interface{}, error) {
+		FromOperation(func(ctx context.Context) (action.Result, error) {
 			operationCalled = true
 
-			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (any, error) {
+			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).
@@ -80,7 +81,7 @@ func TestExpirable_ExpectCancellation(t *testing.T) {
 		Go(ctx)
 
 	if !operationCalled {
-		t.Errorf("operation should have been called")
+		t.Errorf("action should have been called")
 	}
 
 	if res == 42 {
@@ -100,10 +101,10 @@ func TestExpirable_ExpectCancellationDuringDelay(t *testing.T) {
 
 	res, err := NewBuilder().
 		WithDelay(2 * time.Second).
-		FromOperation(func(ctx context.Context) (interface{}, error) {
+		FromOperation(func(ctx context.Context) (action.Result, error) {
 			operationCalled = true
 
-			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (any, error) {
+			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).
@@ -111,7 +112,7 @@ func TestExpirable_ExpectCancellationDuringDelay(t *testing.T) {
 		Go(ctx)
 
 	if operationCalled {
-		t.Errorf("Operation should not have been called")
+		t.Errorf("Action should not have been called")
 	}
 
 	if res == 42 {

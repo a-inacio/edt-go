@@ -2,11 +2,12 @@ package expirable
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/action"
 	"time"
 )
 
 type Hooks struct {
-	Operation   func(ctx context.Context) (interface{}, error)
+	Action      func(ctx context.Context) (interface{}, error)
 	OnExpired   func(ctx context.Context)
 	OnSuccess   func(ctx context.Context, result interface{})
 	OnError     func(ctx context.Context, e error)
@@ -15,14 +16,14 @@ type Hooks struct {
 }
 
 type Expirable struct {
-	timeout   time.Duration
-	operation func(ctx context.Context) (interface{}, error)
-	hooks     Hooks
+	timeout time.Duration
+	action  action.Action
+	hooks   Hooks
 }
 
 type Builder struct {
 	timeout   time.Duration
 	delay     time.Duration
-	operation func(ctx context.Context) (interface{}, error)
+	operation action.Action
 	hooks     Hooks
 }

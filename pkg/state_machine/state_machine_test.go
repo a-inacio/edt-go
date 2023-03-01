@@ -2,6 +2,7 @@ package state_machine
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/awaitable"
 	"testing"
 	"time"
@@ -125,9 +126,9 @@ func TestNewStateMachine_Cancellation(t *testing.T) {
 			onBeforeCalled = true
 		},
 		OnEnter: func(ctx context.Context, trigger Trigger) {
-			awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (any, error) {
+			awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
 				onEnterCalled = true
-				return nil, nil
+				return action.Nothing()
 			})
 		},
 	}

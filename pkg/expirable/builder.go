@@ -2,6 +2,7 @@ package expirable
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/awaitable"
 	"time"
 )
@@ -10,7 +11,7 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
-func (builder *Builder) FromOperation(operation func(ctx context.Context) (interface{}, error)) *Builder {
+func (builder *Builder) FromOperation(operation action.Action) *Builder {
 	builder.operation = operation
 	return builder
 }
@@ -29,17 +30,17 @@ func (builder *Builder) Build() *Expirable {
 	operation := builder.operation
 
 	if builder.delay > 0 {
-		operation = func(ctx context.Context) (interface{}, error) {
-			return awaitable.RunAfter(ctx, builder.delay, func(ctx context.Context) (any, error) {
+		operation = func(ctx context.Context) (action.Result, error) {
+			return awaitable.RunAfter(ctx, builder.delay, func(ctx context.Context) (action.Result, error) {
 				return builder.operation(ctx)
 			})
 		}
 	}
 
 	return &Expirable{
-		timeout:   builder.timeout,
-		hooks:     builder.hooks,
-		operation: operation,
+		timeout: builder.timeout,
+		hooks:   builder.hooks,
+		action:  operation,
 	}
 }
 

@@ -2,10 +2,11 @@ package expirable
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/action"
 	"time"
 )
 
-func (e *Expirable) Go(ctx context.Context) (interface{}, error) {
+func (e *Expirable) Go(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -14,22 +15,22 @@ func (e *Expirable) Go(ctx context.Context) (interface{}, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Create a channel that is used to signal completion of the long-running operation
+	// Create a channel that is used to signal completion of the long-running action
 	ch := make(chan struct {
 		any
 		error
 	}, 1)
 
-	// Start the long-running operation in a separate goroutine
+	// Start the long-running action in a separate goroutine
 	go func() {
-		res, err := e.operation(ctx)
+		res, err := e.action(ctx)
 		ch <- struct {
 			any
 			error
 		}{res, err}
 	}()
 
-	// Wait for the operation to complete or for the timeout to expire
+	// Wait for the action to complete or for the timeout to expire
 	select {
 	case <-ctx.Done():
 		// The parent context was cancelled, cancel the child context
@@ -43,7 +44,7 @@ func (e *Expirable) Go(ctx context.Context) (interface{}, error) {
 			return res.any, nil
 		}
 	case <-time.After(e.timeout):
-		// The operation timed out...
+		// The action timed out...
 		e.onExpiredCb(ctx)
 		// ...cancel the child context
 		cancel()
