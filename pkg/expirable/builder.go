@@ -30,7 +30,7 @@ func (builder *Builder) Build() *Expirable {
 
 	if builder.delay > 0 {
 		operation = func(ctx context.Context) (interface{}, error) {
-			return awaitable.RunAfter(ctx, builder.delay, func() (any, error) {
+			return awaitable.RunAfter(ctx, builder.delay, func(ctx context.Context) (any, error) {
 				return builder.operation(ctx)
 			})
 		}

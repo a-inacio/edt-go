@@ -125,7 +125,7 @@ func TestNewStateMachine_Cancellation(t *testing.T) {
 			onBeforeCalled = true
 		},
 		OnEnter: func(ctx context.Context, trigger Trigger) {
-			awaitable.RunAfter(ctx, 5*time.Second, func() (any, error) {
+			awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (any, error) {
 				onEnterCalled = true
 				return nil, nil
 			})
