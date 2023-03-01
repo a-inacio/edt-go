@@ -44,6 +44,6 @@ func (builder *Builder) Build() *Expirable {
 	}
 }
 
-func (builder *Builder) Go(ctx context.Context) (interface{}, error) {
+func (builder *Builder) Go(ctx context.Context) (action.Result, error) {
 	return builder.Build().Go(ctx)
 }
