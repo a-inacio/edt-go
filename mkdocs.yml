@@ -50,5 +50,18 @@ markdown_extensions:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
 
+nav:
+  - Home: index.md
+  - Getting Started:
+      - action.md
+      - actor.md
+      - awaitable.md
+      - director.md
+      - event.md
+      - event_hub.md
+      - expirable.md
+      - loopable.md
+      - state_machine.md
+
 copyright: |
   &copy; 2023 <a href="https://github.com/a-inacio"  target="_blank" rel="noopener">António Inácio</a>
