@@ -12,12 +12,14 @@ This library implements a bunch of Design Patterns, so you will want to understa
 
 ### Creational
 These Constructs have the purpose of bridging your code with other Constructs:
+
  - Action
  - Event
 
 ### Behavioral 
 
 These Constructs will help you on specific scenarios where you want to have your code behaving in a certain way:
+
  - Actor
  - Director
  - Event Hub
@@ -26,6 +28,7 @@ These Constructs will help you on specific scenarios where you want to have your
 ### Concurrency
 
 There Constructs will help you on specific scenarios where you need to deal with asynchronous operations:
+
  - Awaitable
  - Expirable
 
