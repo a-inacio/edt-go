@@ -49,6 +49,6 @@ res, err := expirable.NewBuilder().
 ```
 
 The code above sets up an `Expirable`, using the `Builder` method, that will wait up to `10 seconds` to execute a task.
-The task is just an `Awaitable` (a simple Construct) that will return `42` after `5 seconds` ellapse. 
+The task is just an `Awaitable` (a simple Construct) that will return `42` after `5 seconds` elapse. 
 
-> 👉 Simpler Constructs will not offer a Builder method, simply because there would not be added value.
+> 👉 Simpler Constructs do not offer a Builder method, because there would not be added value with the extra verbosity.
