@@ -52,16 +52,20 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started:
+  - Constructs:
+    - Creational:
       - action.md
-      - actor.md
-      - awaitable.md
-      - director.md
       - event.md
+    - Behavioral:
+      - actor.md
+      - director.md
       - event_hub.md
-      - expirable.md
       - loopable.md
       - state_machine.md
+    - Concurrency:
+      - awaitable.md
+      - expirable.md
+  - Getting Started: getting-started.md
 
 copyright: |
   &copy; 2023 <a href="https://github.com/a-inacio"  target="_blank" rel="noopener">António Inácio</a>
