@@ -3,7 +3,6 @@ package expectable
 import (
 	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/edt-go/pkg/event_hub"
-	"sync"
 )
 
 type Expectable struct {
@@ -12,5 +11,5 @@ type Expectable struct {
 }
 
 type expectableEventHandler struct {
-	wg sync.WaitGroup
+	ch chan struct{}
 }

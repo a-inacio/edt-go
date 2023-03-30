@@ -7,6 +7,10 @@ import (
 )
 
 func RunAfter(ctx context.Context, timeout time.Duration, a action.Action) (action.Result, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	select {
 	case <-time.After(timeout):
 		// Wait for a certain duration

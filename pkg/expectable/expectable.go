@@ -5,7 +5,6 @@ import (
 	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/edt-go/pkg/event_hub"
-	"sync"
 )
 
 func NewExpectable(h *event_hub.Hub, e event.Event) *Expectable {
@@ -19,14 +18,13 @@ func (ex *Expectable) Go(ctx context.Context) (action.Result, error) {
 
 	h := ex.subscribe()
 
+	defer ex.unsubscribe(h)
+
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	default:
-		h.wg.Wait()
+	case <-h.ch:
 	}
-
-	ex.unsubscribe(h)
 
 	return action.Nothing()
 }
@@ -36,15 +34,14 @@ func (ex *Expectable) Go(ctx context.Context) (action.Result, error) {
 // ==============================================================================
 
 func (h *expectableEventHandler) Handler(ctx context.Context, e event.Event) error {
-	h.wg.Done()
+	h.ch <- struct{}{}
 	return nil
 }
 
 func (ex *Expectable) subscribe() *expectableEventHandler {
-	var wg sync.WaitGroup
-	wg.Add(1)
 	h := &expectableEventHandler{
-		wg: wg,
+		ch: make(chan struct {
+		}, 1),
 	}
 
 	ex.h.Subscribe(ex.e, h)
@@ -54,4 +51,5 @@ func (ex *Expectable) subscribe() *expectableEventHandler {
 
 func (ex *Expectable) unsubscribe(h *expectableEventHandler) {
 	ex.h.Unsubscribe(ex.e, h)
+	close(h.ch)
 }
