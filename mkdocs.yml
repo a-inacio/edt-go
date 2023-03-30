@@ -65,6 +65,7 @@ nav:
     - Concurrency:
       - awaitable.md
       - expirable.md
+      - expectable.md
   - Getting Started: getting-started.md
 
 copyright: |

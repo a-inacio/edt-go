@@ -31,6 +31,7 @@ There Constructs will help you on specific scenarios where you need to deal with
 
  - Awaitable
  - Expirable
+ - Expectable
 
 ## Construct Builders
 
