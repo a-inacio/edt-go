@@ -7,6 +7,10 @@ import (
 )
 
 func RunForever(ctx context.Context, delay time.Duration, actions ...action.Action) (action.Result, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	for {
 		for _, a := range actions {
 			a(ctx)
