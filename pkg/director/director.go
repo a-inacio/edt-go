@@ -14,7 +14,7 @@ func (d *Director) Go(ctx context.Context) (action.Result, error) {
 	}
 
 	// Create a cancellation context
-	dCtx, cancel := context.WithCancel(context.Background())
+	dCtx, cancel := context.WithCancel(ctx)
 
 	for _, a := range d.actions {
 		go func(ctx context.Context, a action.Action) {

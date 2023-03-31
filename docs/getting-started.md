@@ -15,6 +15,7 @@ These Constructs have the purpose of bridging your code with other Constructs:
 
  - Action
  - Event
+ - Injector
 
 ### Behavioral 
 

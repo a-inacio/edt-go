@@ -56,6 +56,7 @@ nav:
     - Creational:
       - action.md
       - event.md
+      - injector.md
     - Behavioral:
       - actor.md
       - director.md
