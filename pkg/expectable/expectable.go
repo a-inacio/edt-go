@@ -23,7 +23,8 @@ func (ex *Expectable) Go(ctx context.Context) (action.Result, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case <-h.ch:
+	case res := <-h.ch:
+		return res.Result, res.error
 	}
 
 	return action.Nothing()
@@ -34,13 +35,21 @@ func (ex *Expectable) Go(ctx context.Context) (action.Result, error) {
 // ==============================================================================
 
 func (h *expectableEventHandler) Handler(ctx context.Context, e event.Event) error {
-	h.ch <- struct{}{}
+	h.ch <- struct {
+		action.Result
+		error
+	}{
+		e,
+		nil,
+	}
 	return nil
 }
 
 func (ex *Expectable) subscribe() *expectableEventHandler {
 	h := &expectableEventHandler{
 		ch: make(chan struct {
+			action.Result
+			error
 		}, 1),
 	}
 

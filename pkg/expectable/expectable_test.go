@@ -10,7 +10,7 @@ import (
 )
 
 type SomeEvent struct {
-	ShouldFail bool
+	Message string
 }
 
 func TestExpectable_ContinueAfterEvent(t *testing.T) {
@@ -21,11 +21,25 @@ func TestExpectable_ContinueAfterEvent(t *testing.T) {
 	expect := NewExpectable(hub, SomeEvent{})
 
 	go awaitable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
-		hub.Publish(SomeEvent{}, ctx)
+		hub.Publish(SomeEvent{
+			Message: "Hello EDT!",
+		}, ctx)
 		return action.Nothing()
 	})
 
-	expect.Go(ctx)
+	res, err := expect.Go(ctx)
+
+	if err != nil {
+		t.Errorf("Should not have failled")
+	}
+
+	if res == nil {
+		t.Errorf("Should have gotten a result")
+	}
+
+	if res.(SomeEvent).Message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", res.(SomeEvent).Message)
+	}
 }
 
 func TestExpectable_ShouldBeCanceled(t *testing.T) {
