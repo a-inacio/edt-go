@@ -1,7 +1,11 @@
 package injector
 
 import (
+	"context"
+	"github.com/a-inacio/edt-go/pkg/action"
+	"github.com/a-inacio/edt-go/pkg/expirable"
 	"testing"
+	"time"
 )
 
 type SomeValue struct {
@@ -55,5 +59,26 @@ func TestWithContext_Factory(t *testing.T) {
 
 	if value.counter != 2 {
 		t.Errorf("Expected %v, got %v", 2, value.counter)
+	}
+}
+
+func TestFromContext(t *testing.T) {
+	injector := WithContext(nil)
+	injector.SetSingleton(SomeValue{message: "Hello EDT!"})
+
+	value, err := expirable.NewBuilder().
+		FromOperation(func(ctx context.Context) (action.Result, error) {
+			value, err := GetValue(FromContext(ctx), SomeValue{})
+			return value.message, err
+		}).
+		WithTimeout(2 * time.Second).
+		Go(injector.Context())
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value)
 	}
 }

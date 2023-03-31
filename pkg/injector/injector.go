@@ -57,7 +57,7 @@ func GetValue[T any](i *Instance, value T) (*T, error) {
 }
 
 func (i *Instance) SetSingleton(value interface{}) {
-	key := reflect.TypeOf(value).PkgPath()
+	key := reflect.TypeOf(value).String()
 
 	i.data[key] = func() interface{} {
 		return value
@@ -74,4 +74,8 @@ func (i *Instance) SetFactory(factory interface{}) {
 		returnValues := fn.Call(nil)
 		return returnValues[0].Interface()
 	}
+}
+
+func (i *Instance) Context() context.Context {
+	return i.ctx
 }
