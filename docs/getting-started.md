@@ -11,11 +11,13 @@ got get -u github.com/a-inacio/edt-go
 This library implements a bunch of Design Patterns, so you will want to understand their roles and how they fit together in order to leverage from this toolkit.
 
 ### Creational
-These Constructs have the purpose of bridging your code with other Constructs:
+These Constructs have the primary purpose of bridging your code with other Constructs:
 
  - Action
  - Event
  - Injector
+
+> 👉 You can also see them as a glue the chain Constructs together. 
 
 ### Behavioral 
 
