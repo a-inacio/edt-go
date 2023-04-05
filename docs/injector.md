@@ -8,7 +8,7 @@ It only relies on Go's standard `context.Context` so, as long as you keep track 
 
 > 👉 Means you are not limited only to these library's constructs. 
 
-## Dependency Injection
+## Usage
 
 ### Setting Values
 
