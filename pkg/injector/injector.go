@@ -56,15 +56,21 @@ func GetValue[T any](i *Instance, value T) (*T, error) {
 	return &typedVal, nil
 }
 
-func (i *Instance) SetSingleton(value interface{}) {
+func GetValueFromContext[T any](ctx context.Context, value T) (*T, error) {
+	return GetValue(FromContext(ctx), value)
+}
+
+func (i *Instance) SetSingleton(value interface{}) *Instance {
 	key := reflect.TypeOf(value).String()
 
 	i.data[key] = func() interface{} {
 		return value
 	}
+
+	return i
 }
 
-func (i *Instance) SetFactory(factory interface{}) {
+func (i *Instance) SetFactory(factory interface{}) *Instance {
 	fn := reflect.ValueOf(factory)
 	returnType := fn.Type().Out(0)
 
@@ -74,6 +80,8 @@ func (i *Instance) SetFactory(factory interface{}) {
 		returnValues := fn.Call(nil)
 		return returnValues[0].Interface()
 	}
+
+	return i
 }
 
 func (i *Instance) Context() context.Context {

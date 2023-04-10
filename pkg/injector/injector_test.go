@@ -13,6 +13,11 @@ type SomeValue struct {
 	counter int
 }
 
+type AnotherValue struct {
+	message string
+	counter int
+}
+
 func TestWithContext_Singleton(t *testing.T) {
 	injector := WithContext(nil)
 	injector.SetSingleton(SomeValue{message: "Hello EDT!"})
@@ -80,5 +85,37 @@ func TestFromContext(t *testing.T) {
 
 	if value != "Hello EDT!" {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value)
+	}
+}
+
+func TestChainMethods(t *testing.T) {
+	counter := 0
+
+	ctx := WithContext(nil).
+		SetSingleton(SomeValue{message: "Hello EDT!"}).
+		SetFactory(func() AnotherValue {
+			counter++
+			return AnotherValue{counter: counter}
+		}).
+		Context()
+
+	value, err := GetValueFromContext(ctx, SomeValue{})
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+
+	anotherValue, err := GetValueFromContext(ctx, AnotherValue{})
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if anotherValue.counter != 1 {
+		t.Errorf("Expected %v, got %v", 1, value.counter)
 	}
 }
