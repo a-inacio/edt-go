@@ -3,7 +3,6 @@ package expectable
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
-	"github.com/a-inacio/edt-go/pkg/awaitable"
 	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/edt-go/pkg/event_hub"
 )
@@ -28,13 +27,8 @@ func (ex *Expectable) Go(ctx context.Context) (action.Result, error) {
 
 	if ex.timeout > 0 {
 		// Create a child context that is cancelled when the parent context is cancelled
-		currentCtx, cancel = context.WithCancel(currentCtx)
+		currentCtx, cancel = context.WithTimeout(context.Background(), ex.timeout)
 		defer cancel()
-
-		go awaitable.RunAfter(currentCtx, ex.timeout, func(ctx context.Context) (action.Result, error) {
-			cancel()
-			return action.Nothing()
-		})
 	}
 
 	for {
