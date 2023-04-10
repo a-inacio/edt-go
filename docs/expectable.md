@@ -71,7 +71,7 @@ res, err := expectable.NewBuilder().
 }
 ```
 
-The example above will only unlock with a event message containing `Hello EDT!`.
+The example above will only unlock with an event message containing `Hello EDT!`.
 
 > 👉 You can also combine this scenario with a Timeout.
 
