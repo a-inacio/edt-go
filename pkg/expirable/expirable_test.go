@@ -3,7 +3,7 @@ package expirable
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
-	"github.com/a-inacio/edt-go/pkg/awaitable"
+	"github.com/a-inacio/edt-go/pkg/delayable"
 	"testing"
 	"time"
 )
@@ -28,7 +28,7 @@ func TestExpirable_Expect42(t *testing.T) {
 func TestExpirable_ExpectTimeout(t *testing.T) {
 	res, err := NewBuilder().
 		FromOperation(func(ctx context.Context) (action.Result, error) {
-			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
+			return delayable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).
@@ -47,7 +47,7 @@ func TestExpirable_ExpectTimeout(t *testing.T) {
 func TestExpirable_ShouldNotTimeout(t *testing.T) {
 	res, err := NewBuilder().
 		FromOperation(func(ctx context.Context) (action.Result, error) {
-			return awaitable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
+			return delayable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).
@@ -73,7 +73,7 @@ func TestExpirable_ExpectCancellation(t *testing.T) {
 		FromOperation(func(ctx context.Context) (action.Result, error) {
 			operationCalled = true
 
-			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
+			return delayable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).
@@ -104,7 +104,7 @@ func TestExpirable_ExpectCancellationDuringDelay(t *testing.T) {
 		FromOperation(func(ctx context.Context) (action.Result, error) {
 			operationCalled = true
 
-			return awaitable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
+			return delayable.RunAfter(ctx, 5*time.Second, func(ctx context.Context) (action.Result, error) {
 				return 42, nil
 			})
 		}).

@@ -3,7 +3,7 @@ package expirable
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
-	"github.com/a-inacio/edt-go/pkg/awaitable"
+	"github.com/a-inacio/edt-go/pkg/delayable"
 	"time"
 )
 
@@ -31,7 +31,7 @@ func (builder *Builder) Build() *Expirable {
 
 	if builder.delay > 0 {
 		operation = func(ctx context.Context) (action.Result, error) {
-			return awaitable.RunAfter(ctx, builder.delay, func(ctx context.Context) (action.Result, error) {
+			return delayable.RunAfter(ctx, builder.delay, func(ctx context.Context) (action.Result, error) {
 				return builder.operation(ctx)
 			})
 		}

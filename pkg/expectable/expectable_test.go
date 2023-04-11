@@ -3,7 +3,7 @@ package expectable
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
-	"github.com/a-inacio/edt-go/pkg/awaitable"
+	"github.com/a-inacio/edt-go/pkg/delayable"
 	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/edt-go/pkg/eventhub"
 	"testing"
@@ -21,7 +21,7 @@ func TestExpectable_ContinueAfterEvent(t *testing.T) {
 
 	expect := NewExpectable(hub, SomeEvent{})
 
-	go awaitable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
+	go delayable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
 		hub.Publish(SomeEvent{
 			Message: "Hello EDT!",
 		}, ctx)
@@ -48,7 +48,7 @@ func TestExpectable_ShouldBeCanceled(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go awaitable.RunAfter(nil, 1*time.Second, func(ctx context.Context) (action.Result, error) {
+	go delayable.RunAfter(nil, 1*time.Second, func(ctx context.Context) (action.Result, error) {
 		cancel()
 		return action.Nothing()
 	})
@@ -84,7 +84,7 @@ func TestExpectableBuilder_ShouldContinueAfterEvent(t *testing.T) {
 		WithTimeout(2 * time.Second).
 		Build()
 
-	go awaitable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
+	go delayable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
 		hub.Publish(SomeEvent{
 			Message: "Hello EDT!",
 		}, ctx)
@@ -123,7 +123,7 @@ func TestExpectableBuilder_ShouldNotContinueAfterEvent(t *testing.T) {
 		}).
 		Build()
 
-	go awaitable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
+	go delayable.RunAfter(ctx, 1*time.Second, func(ctx context.Context) (action.Result, error) {
 		hub.Publish(SomeEvent{
 			Message: "Hello EDT!",
 		}, ctx)

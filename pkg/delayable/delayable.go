@@ -1,4 +1,4 @@
-package awaitable
+package delayable
 
 import (
 	"context"

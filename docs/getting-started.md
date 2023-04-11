@@ -24,6 +24,7 @@ These Constructs have the primary purpose of bridging your code with other Const
 These Constructs will help you on specific scenarios where you want to have your code behaving in a certain way:
 
  - Actor
+ - Delayable
  - Director
  - Event Hub
  - State Machine
@@ -33,8 +34,8 @@ These Constructs will help you on specific scenarios where you want to have your
 There Constructs will help you on specific scenarios where you need to deal with asynchronous operations:
 
  - Awaitable
- - Expirable
  - Expectable
+ - Expirable
 
 ## Construct Builders
 

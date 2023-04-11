@@ -59,14 +59,15 @@ nav:
       - injector.md
     - Behavioral:
       - actor.md
+      - delayable.md
       - director.md
       - eventhub.md
       - loopable.md
       - statemachine.md
     - Concurrency:
       - awaitable.md
-      - expirable.md
       - expectable.md
+      - expirable.md
   - Getting Started: getting-started.md
 
 copyright: |
