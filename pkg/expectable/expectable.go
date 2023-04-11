@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"github.com/a-inacio/edt-go/pkg/event_hub"
+	"github.com/a-inacio/edt-go/pkg/eventhub"
 )
 
-func NewExpectable(h *event_hub.Hub, e event.Event) *Expectable {
+func NewExpectable(h *eventhub.EventHub, e event.Event) *Expectable {
 	return &Expectable{h: h, e: e}
 }
 

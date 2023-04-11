@@ -1,4 +1,4 @@
-package event_hub
+package eventhub
 
 import (
 	"context"

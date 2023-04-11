@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"github.com/a-inacio/edt-go/pkg/event_hub"
+	"github.com/a-inacio/edt-go/pkg/eventhub"
 	"time"
 )
 
@@ -13,7 +13,7 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
-func (builder *Builder) On(h *event_hub.Hub) *Builder {
+func (builder *Builder) On(h *eventhub.EventHub) *Builder {
 	builder.h = h
 	return builder
 }

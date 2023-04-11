@@ -3,7 +3,7 @@ package state_machine
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"github.com/a-inacio/edt-go/pkg/event_hub"
+	"github.com/a-inacio/edt-go/pkg/eventhub"
 )
 
 type State struct {
@@ -66,7 +66,7 @@ type StateMachineBuilder struct {
 	graph        string
 	events       []eventBuilder
 	context      context.Context
-	hub          *event_hub.Hub
+	hub          *eventhub.EventHub
 }
 
 type stateMachineHubHandler struct {

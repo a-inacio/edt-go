@@ -1,4 +1,4 @@
-package event_hub
+package eventhub
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func NewHub(config *HubConfig) *Hub {
+func NewHub(config *Config) *EventHub {
 	logger := rosetta.NewLogger(logger.NullLoggerType)
 
 	if config != nil {
@@ -16,17 +16,17 @@ func NewHub(config *HubConfig) *Hub {
 			logger = config.Logger
 		}
 	}
-	return &Hub{subscriptions: make(map[string]handlers), l: logger}
+	return &EventHub{subscriptions: make(map[string]handlers), l: logger}
 }
 
-func (h *Hub) Subscribe(e event.Event, handler EventHandler) {
+func (h *EventHub) Subscribe(e event.Event, handler Handler) {
 	eventName := event.GetName(e)
 
 	h.mu.Lock()
 
 	subscriptions, contains := h.subscriptions[eventName]
 	if !contains {
-		subscriptions = handlers{callbacks: make([]EventHandler, 0)}
+		subscriptions = handlers{callbacks: make([]Handler, 0)}
 	}
 
 	subscriptions.callbacks = append(subscriptions.callbacks, handler)
@@ -35,7 +35,7 @@ func (h *Hub) Subscribe(e event.Event, handler EventHandler) {
 	h.mu.Unlock()
 }
 
-func (h *Hub) Unsubscribe(e event.Event, handler EventHandler) {
+func (h *EventHub) Unsubscribe(e event.Event, handler Handler) {
 	eventName := event.GetName(e)
 
 	h.mu.Lock()
@@ -58,13 +58,13 @@ func (h *Hub) Unsubscribe(e event.Event, handler EventHandler) {
 	h.mu.Unlock()
 }
 
-func (h *Hub) Publish(e event.Event, ctx context.Context) *sync.WaitGroup {
+func (h *EventHub) Publish(e event.Event, ctx context.Context) *sync.WaitGroup {
 	log := h.l
 	eventName := event.GetName(e)
 
 	var wg sync.WaitGroup
 
-	var callbacks []EventHandler
+	var callbacks []Handler
 
 	h.mu.Lock()
 

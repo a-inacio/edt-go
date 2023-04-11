@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/a-inacio/edt-go/internal/mermaid"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"github.com/a-inacio/edt-go/pkg/event_hub"
+	"github.com/a-inacio/edt-go/pkg/eventhub"
 	"strings"
 )
 
@@ -23,7 +23,7 @@ func (builder *StateMachineBuilder) WithContext(ctx context.Context) *StateMachi
 	return builder
 }
 
-func (builder *StateMachineBuilder) SubscribeFrom(hub *event_hub.Hub) *StateMachineBuilder {
+func (builder *StateMachineBuilder) SubscribeFrom(hub *eventhub.EventHub) *StateMachineBuilder {
 	builder.hub = hub
 	return builder
 }

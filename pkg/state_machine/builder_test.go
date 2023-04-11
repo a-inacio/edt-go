@@ -3,7 +3,7 @@ package state_machine
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"github.com/a-inacio/edt-go/pkg/event_hub"
+	"github.com/a-inacio/edt-go/pkg/eventhub"
 	"testing"
 )
 
@@ -337,7 +337,7 @@ func TestStateMachine_TriggerEvent_FromBuilder_WithHub(t *testing.T) {
 	type GoToD struct {
 	}
 
-	hub := event_hub.NewHub(nil)
+	hub := eventhub.NewHub(nil)
 
 	sm, _ := NewBuilder().
 		WithInitialState(&State{

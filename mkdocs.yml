@@ -60,7 +60,7 @@ nav:
     - Behavioral:
       - actor.md
       - director.md
-      - event_hub.md
+      - eventhub.md
       - loopable.md
       - state_machine.md
     - Concurrency:

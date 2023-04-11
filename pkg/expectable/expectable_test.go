@@ -5,7 +5,7 @@ import (
 	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/awaitable"
 	"github.com/a-inacio/edt-go/pkg/event"
-	"github.com/a-inacio/edt-go/pkg/event_hub"
+	"github.com/a-inacio/edt-go/pkg/eventhub"
 	"testing"
 	"time"
 )
@@ -15,7 +15,7 @@ type SomeEvent struct {
 }
 
 func TestExpectable_ContinueAfterEvent(t *testing.T) {
-	hub := event_hub.NewHub(nil)
+	hub := eventhub.NewHub(nil)
 
 	ctx := context.Background()
 
@@ -44,7 +44,7 @@ func TestExpectable_ContinueAfterEvent(t *testing.T) {
 }
 
 func TestExpectable_ShouldBeCanceled(t *testing.T) {
-	hub := event_hub.NewHub(nil)
+	hub := eventhub.NewHub(nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -61,7 +61,7 @@ func TestExpectable_ShouldBeCanceled(t *testing.T) {
 }
 
 func TestExpectableBuilder_ShouldBeCanceled(t *testing.T) {
-	hub := event_hub.NewHub(nil)
+	hub := eventhub.NewHub(nil)
 
 	_, err := NewBuilder().
 		On(hub).
@@ -75,7 +75,7 @@ func TestExpectableBuilder_ShouldBeCanceled(t *testing.T) {
 }
 
 func TestExpectableBuilder_ShouldContinueAfterEvent(t *testing.T) {
-	hub := event_hub.NewHub(nil)
+	hub := eventhub.NewHub(nil)
 	ctx := context.Background()
 
 	expect, err := NewBuilder().
@@ -107,7 +107,7 @@ func TestExpectableBuilder_ShouldContinueAfterEvent(t *testing.T) {
 }
 
 func TestExpectableBuilder_ShouldNotContinueAfterEvent(t *testing.T) {
-	hub := event_hub.NewHub(nil)
+	hub := eventhub.NewHub(nil)
 	ctx := context.Background()
 
 	expect, err := NewBuilder().

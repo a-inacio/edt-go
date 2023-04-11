@@ -1,4 +1,4 @@
-package event_hub
+package eventhub
 
 import (
 	"context"
@@ -7,20 +7,20 @@ import (
 	"sync"
 )
 
-type Hub struct {
+type EventHub struct {
 	mu            sync.Mutex
 	l             logger.Logger
 	subscriptions map[string]handlers
 }
 
-type HubConfig struct {
+type Config struct {
 	Logger logger.Logger
 }
 
-type EventHandler interface {
+type Handler interface {
 	Handler(ctx context.Context, e event.Event) error
 }
 
 type handlers struct {
-	callbacks []EventHandler
+	callbacks []Handler
 }
