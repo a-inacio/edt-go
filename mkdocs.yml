@@ -62,7 +62,7 @@ nav:
       - director.md
       - eventhub.md
       - loopable.md
-      - state_machine.md
+      - statemachine.md
     - Concurrency:
       - awaitable.md
       - expirable.md
