@@ -6,18 +6,24 @@ import (
 	"time"
 )
 
-func RunAfter(ctx context.Context, timeout time.Duration, a action.Action) (action.Result, error) {
+func (d *Delayable) Go(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	select {
-	case <-time.After(timeout):
+	case <-time.After(d.delay):
 		// Wait for a certain duration
 	case <-ctx.Done():
-		// The context was cancelled, cancel the delay and return the error
+		// The context was cancelled
 		return action.FromError(ctx.Err())
 	}
 
-	return a(ctx)
+	return d.operation(ctx)
+}
+
+func RunAfter(ctx context.Context, delay time.Duration, a action.Action) (action.Result, error) {
+	return NewBuilder().
+		FromAction(a).
+		WithDelay(delay).Go(ctx)
 }
