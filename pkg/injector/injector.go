@@ -6,31 +6,31 @@ import (
 	"reflect"
 )
 
-type Instance struct {
+type Injector struct {
 	data map[string]func() interface{}
 	ctx  context.Context
 }
 
-func WithContext(ctx context.Context) *Instance {
+func WithContext(ctx context.Context) *Injector {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	i := &Instance{
+	i := &Injector{
 		data: make(map[string]func() interface{}),
 	}
 
-	i.ctx = context.WithValue(ctx, reflect.TypeOf(Instance{}).PkgPath(), i)
+	i.ctx = context.WithValue(ctx, reflect.TypeOf(Injector{}).PkgPath(), i)
 
 	return i
 }
 
-func FromContext(ctx context.Context) *Instance {
+func FromContext(ctx context.Context) *Injector {
 	if ctx == nil {
 		return WithContext(nil)
 	}
 
-	i, ok := ctx.Value(reflect.TypeOf(Instance{}).PkgPath()).(*Instance)
+	i, ok := ctx.Value(reflect.TypeOf(Injector{}).PkgPath()).(*Injector)
 
 	if !ok || i == nil {
 		return WithContext(nil)
@@ -39,7 +39,7 @@ func FromContext(ctx context.Context) *Instance {
 	return i
 }
 
-func GetValue[T any](i *Instance, value T) (*T, error) {
+func GetValue[T any](i *Injector, value T) (*T, error) {
 	key := reflect.TypeOf(value).String()
 	// Fetch the value from the map using the key.
 	getter, ok := i.data[key]
@@ -60,7 +60,7 @@ func GetValueFromContext[T any](ctx context.Context, value T) (*T, error) {
 	return GetValue(FromContext(ctx), value)
 }
 
-func (i *Instance) SetSingleton(value interface{}) *Instance {
+func (i *Injector) SetSingleton(value interface{}) *Injector {
 	key := reflect.TypeOf(value).String()
 
 	i.data[key] = func() interface{} {
@@ -70,7 +70,7 @@ func (i *Instance) SetSingleton(value interface{}) *Instance {
 	return i
 }
 
-func (i *Instance) SetFactory(factory interface{}) *Instance {
+func (i *Injector) SetFactory(factory interface{}) *Injector {
 	fn := reflect.ValueOf(factory)
 	returnType := fn.Type().Out(0)
 
@@ -84,6 +84,6 @@ func (i *Instance) SetFactory(factory interface{}) *Instance {
 	return i
 }
 
-func (i *Instance) Context() context.Context {
+func (i *Injector) Context() context.Context {
 	return i.ctx
 }
