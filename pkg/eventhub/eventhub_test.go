@@ -45,7 +45,7 @@ func (h *SomeGenericEventHandler) Handler(ctx context.Context, e event.Event) er
 }
 
 func TestHub_PublishAndSubscribe(t *testing.T) {
-	hub := NewHub(nil)
+	hub := NewEventHub(nil)
 
 	someEventHandler := &SomeEventHandler{}
 
@@ -61,7 +61,7 @@ func TestHub_PublishAndSubscribe(t *testing.T) {
 }
 
 func TestHub_PublishEventWithoutSubscribers(t *testing.T) {
-	hub := NewHub(nil)
+	hub := NewEventHub(nil)
 
 	wg := hub.Publish(SomeOtherEvent{}, nil)
 
@@ -69,7 +69,7 @@ func TestHub_PublishEventWithoutSubscribers(t *testing.T) {
 }
 
 func TestHub_FailingSubscriber(t *testing.T) {
-	hub := NewHub(nil)
+	hub := NewEventHub(nil)
 
 	someEventHandler := &SomeEventHandler{}
 
@@ -85,7 +85,7 @@ func TestHub_FailingSubscriber(t *testing.T) {
 }
 
 func TestHub_PublishAndSubscribeWithGenericEvents(t *testing.T) {
-	hub := NewHub(nil)
+	hub := NewEventHub(nil)
 
 	someEventHandler := &SomeGenericEventHandler{}
 

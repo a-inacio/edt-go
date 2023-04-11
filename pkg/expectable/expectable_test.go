@@ -15,7 +15,7 @@ type SomeEvent struct {
 }
 
 func TestExpectable_ContinueAfterEvent(t *testing.T) {
-	hub := eventhub.NewHub(nil)
+	hub := eventhub.NewEventHub(nil)
 
 	ctx := context.Background()
 
@@ -44,7 +44,7 @@ func TestExpectable_ContinueAfterEvent(t *testing.T) {
 }
 
 func TestExpectable_ShouldBeCanceled(t *testing.T) {
-	hub := eventhub.NewHub(nil)
+	hub := eventhub.NewEventHub(nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -61,7 +61,7 @@ func TestExpectable_ShouldBeCanceled(t *testing.T) {
 }
 
 func TestExpectableBuilder_ShouldBeCanceled(t *testing.T) {
-	hub := eventhub.NewHub(nil)
+	hub := eventhub.NewEventHub(nil)
 
 	_, err := NewBuilder().
 		On(hub).
@@ -75,7 +75,7 @@ func TestExpectableBuilder_ShouldBeCanceled(t *testing.T) {
 }
 
 func TestExpectableBuilder_ShouldContinueAfterEvent(t *testing.T) {
-	hub := eventhub.NewHub(nil)
+	hub := eventhub.NewEventHub(nil)
 	ctx := context.Background()
 
 	expect, err := NewBuilder().
@@ -107,7 +107,7 @@ func TestExpectableBuilder_ShouldContinueAfterEvent(t *testing.T) {
 }
 
 func TestExpectableBuilder_ShouldNotContinueAfterEvent(t *testing.T) {
-	hub := eventhub.NewHub(nil)
+	hub := eventhub.NewEventHub(nil)
 	ctx := context.Background()
 
 	expect, err := NewBuilder().

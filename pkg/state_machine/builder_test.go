@@ -337,7 +337,7 @@ func TestStateMachine_TriggerEvent_FromBuilder_WithHub(t *testing.T) {
 	type GoToD struct {
 	}
 
-	hub := eventhub.NewHub(nil)
+	hub := eventhub.NewEventHub(nil)
 
 	sm, _ := NewBuilder().
 		WithInitialState(&State{

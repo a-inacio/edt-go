@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func NewHub(config *Config) *EventHub {
+func NewEventHub(config *Config) *EventHub {
 	logger := rosetta.NewLogger(logger.NullLoggerType)
 
 	if config != nil {
