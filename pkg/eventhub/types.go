@@ -24,3 +24,7 @@ type Handler interface {
 type handlers struct {
 	callbacks []Handler
 }
+
+type callbackHandler struct {
+	cb func(ctx context.Context, e event.Event) error
+}
