@@ -22,18 +22,18 @@ There are two distinct patterns at play here:
 An instance must be given, and it will be the same everytime it is retrieved.
 
 ```go
-injector := WithContext(nil)
-injector.SetSingleton(SomeValue{message: "42"})
+dependencies := injector.WithContext(nil)
+dependencies.SetSingleton(SomeValue{message: "42"})
 ```
 #### Factory
 
 A callback function is to be utilised, you should be creating a new instance on each invocation.
 
 ```go
-injector := WithContext(nil)
+dependencies := injector.WithContext(nil)
 
 counter := 0
-injector.SetFactory(func() SomeValue {
+dependencies.SetFactory(func() SomeValue {
     counter++
     return SomeValue{counter: counter}
 })
@@ -44,9 +44,9 @@ injector.SetFactory(func() SomeValue {
 Independently of how the setter is defined, you get the values always in the same manner.
 
 ```go
-injector := FromContext(ctx)
+dependencies := injector.FromContext(ctx)
 
-value, err := GetValue(injector, SomeValue{})
+value, err := injector.GetValue[SomeValue](dependencies)
 
 if err != nil {
 	// do something with `value`

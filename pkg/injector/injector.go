@@ -39,8 +39,9 @@ func FromContext(ctx context.Context) *Injector {
 	return i
 }
 
-func GetValue[T any](i *Injector, value T) (*T, error) {
-	key := reflect.TypeOf(value).String()
+func GetValue[T any](i *Injector) (*T, error) {
+	t := reflect.TypeOf((*T)(nil)).Elem()
+	key := t.String()
 	// Fetch the value from the map using the key.
 	getter, ok := i.data[key]
 	if !ok {
@@ -56,8 +57,8 @@ func GetValue[T any](i *Injector, value T) (*T, error) {
 	return &typedVal, nil
 }
 
-func GetValueFromContext[T any](ctx context.Context, value T) (*T, error) {
-	return GetValue(FromContext(ctx), value)
+func GetValueFromContext[T any](ctx context.Context) (*T, error) {
+	return GetValue[T](FromContext(ctx))
 }
 
 func (i *Injector) SetSingleton(value interface{}) *Injector {

@@ -22,7 +22,7 @@ func TestWithContext_Singleton(t *testing.T) {
 	injector := WithContext(nil)
 	injector.SetSingleton(SomeValue{message: "Hello EDT!"})
 
-	value, err := GetValue(injector, SomeValue{})
+	value, err := GetValue[SomeValue](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -46,7 +46,7 @@ func TestWithContext_Factory(t *testing.T) {
 		return SomeValue{counter: counter}
 	})
 
-	value, err := GetValue(injector, SomeValue{})
+	value, err := GetValue[SomeValue](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -60,7 +60,7 @@ func TestWithContext_Factory(t *testing.T) {
 		t.Errorf("Expected %v, got %v", 1, value.counter)
 	}
 
-	value, _ = GetValue(injector, SomeValue{})
+	value, _ = GetValue[SomeValue](injector)
 
 	if value.counter != 2 {
 		t.Errorf("Expected %v, got %v", 2, value.counter)
@@ -73,7 +73,7 @@ func TestFromContext(t *testing.T) {
 
 	value, err := expirable.NewBuilder().
 		FromOperation(func(ctx context.Context) (action.Result, error) {
-			value, err := GetValue(FromContext(ctx), SomeValue{})
+			value, err := GetValue[SomeValue](FromContext(ctx))
 			return value.message, err
 		}).
 		WithTimeout(2 * time.Second).
@@ -99,7 +99,7 @@ func TestChainMethods(t *testing.T) {
 		}).
 		Context()
 
-	value, err := GetValueFromContext(ctx, SomeValue{})
+	value, err := GetValueFromContext[SomeValue](ctx)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -109,7 +109,7 @@ func TestChainMethods(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
 
-	anotherValue, err := GetValueFromContext(ctx, AnotherValue{})
+	anotherValue, err := GetValueFromContext[AnotherValue](ctx)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
