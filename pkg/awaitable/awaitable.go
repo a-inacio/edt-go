@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-func Go(ctx context.Context, a action.Action) *Awaitable {
+func AwaitFor(ctx context.Context, a action.Action) *Awaitable {
 	if ctx == nil {
 		ctx = context.Background()
 	}

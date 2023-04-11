@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func TestGo(t *testing.T) {
-	awaitable := Go(nil, expirable.NewBuilder().
+func TestAwaitFor(t *testing.T) {
+	awaitable := AwaitFor(nil, expirable.NewBuilder().
 		FromOperation(func(ctx context.Context) (action.Result, error) {
 			return 42, nil
 		}).
