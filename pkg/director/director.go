@@ -3,7 +3,6 @@ package director
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
-	"os"
 	"os/signal"
 	"syscall"
 )
@@ -14,7 +13,8 @@ func (d *Director) Go(ctx context.Context) (action.Result, error) {
 	}
 
 	// Create a cancellation context
-	dCtx, cancel := context.WithCancel(ctx)
+	dCtx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	for _, a := range d.actions {
 		go func(ctx context.Context, a action.Action) {
@@ -23,12 +23,11 @@ func (d *Director) Go(ctx context.Context) (action.Result, error) {
 		}(dCtx, a)
 	}
 
-	// Wait for a signal to shut down the server
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
+	// Listen for the interrupt signal.
+	<-dCtx.Done()
 
-	cancel()
+	// Restore default behavior on the interrupt signal and notify user of shutdown.
+	stop()
 
 	// Wait for all actions to complete.
 	d.wg.Wait()
