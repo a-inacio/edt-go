@@ -24,6 +24,7 @@ These Constructs have the primary purpose of bridging your code with other Const
 These Constructs will help you on specific scenarios where you want to have your code behaving in a certain way:
 
  - Actor
+ - Executor
  - Delayable
  - Director
  - Event Hub

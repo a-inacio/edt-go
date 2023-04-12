@@ -59,6 +59,7 @@ nav:
       - injector.md
     - Behavioral:
       - actor.md
+      - executor.md
       - delayable.md
       - director.md
       - eventhub.md
