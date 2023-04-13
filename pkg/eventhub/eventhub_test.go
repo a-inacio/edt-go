@@ -21,8 +21,9 @@ type SomeEventHandler struct {
 
 func (h *SomeEventHandler) Handler(ctx context.Context, e event.Event) error {
 	h.GotCalled = true
+	se, _ := event.GetValue[SomeEvent](e)
 
-	if e.(SomeEvent).ShouldFail {
+	if se.ShouldFail {
 		return errors.New("I was asked to fail")
 	}
 
@@ -36,8 +37,9 @@ type SomeGenericEventHandler struct {
 
 func (h *SomeGenericEventHandler) Handler(ctx context.Context, e event.Event) error {
 	h.GotCalled = true
+	gne, _ := event.GetValue[event.GenericNamedEvent](e)
 
-	values := e.(event.GenericNamedEvent).Values
+	values := gne.Values
 
 	h.Message = fmt.Sprintf("%v", values["Message"])
 

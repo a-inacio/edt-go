@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// GetName returns the name of the even, for the special case of NameEvents
+// GetName returns the name of the event, for the special case of NameEvents
 // the returned value is the result of the `EventName` function otherwise
 // it falls back to the Type name (since anything can be an event).
 // By design, the package name is not included.
@@ -55,4 +55,16 @@ func WithNameAndKeyValues(name string, kv ...interface{}) *GenericNamedEvent {
 	}
 
 	return &GenericNamedEvent{name: name, Values: m}
+}
+
+func GetValue[T any](event Event) (*T, error) {
+	t := reflect.TypeOf((*T)(nil)).Elem()
+
+	// Cast the value to the desired type.
+	typedVal, ok := event.(T)
+	if !ok {
+		return nil, fmt.Errorf("value is not of type %s", t.String())
+	}
+
+	return &typedVal, nil
 }
