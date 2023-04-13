@@ -18,6 +18,22 @@ type AnotherValue struct {
 	counter int
 }
 
+type SomeInterface interface {
+	SomeMethod() string
+}
+
+type SomeTypeWithInterface struct {
+	message string
+}
+
+func (t SomeTypeWithInterface) SomeMethod() string { return t.message }
+
+type YetAnotherTypeWithInterface struct {
+	message string
+}
+
+func (t YetAnotherTypeWithInterface) SomeMethod() string { return t.message }
+
 func TestWithContext_Singleton(t *testing.T) {
 	injector := WithContext(nil)
 	injector.SetSingleton(SomeValue{message: "Hello EDT!"})
@@ -117,5 +133,56 @@ func TestChainMethods(t *testing.T) {
 
 	if anotherValue.counter != 1 {
 		t.Errorf("Expected %v, got %v", 1, value.counter)
+	}
+}
+
+func TestWithContext_Singleton_WithInterface(t *testing.T) {
+	injector := WithContext(nil)
+	injector.SetSingleton(SomeTypeWithInterface{message: "Hello EDT!"})
+
+	value, err := GetValue[SomeInterface](injector)
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if (*value).SomeMethod() != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", (*value).SomeMethod())
+	}
+}
+
+func TestWithContext_Singleton_Ptr(t *testing.T) {
+	injector := WithContext(nil)
+	injector.SetSingleton(&SomeValue{message: "Hello EDT!"})
+
+	value, err := GetValue[SomeValue](injector)
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+}
+
+func TestWithContext_Singleton_WithNoSingleInterface(t *testing.T) {
+	injector := WithContext(nil)
+	injector.
+		SetSingleton(SomeTypeWithInterface{message: "Hello EDT!"}).
+		SetSingleton(YetAnotherTypeWithInterface{message: "Hello EDT!"})
+
+	_, err := GetValue[SomeInterface](injector)
+
+	if err == nil {
+		t.Errorf("Should have failed")
 	}
 }

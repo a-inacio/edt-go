@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 type Injector struct {
-	data map[string]func() interface{}
-	ctx  context.Context
+	data  map[string]func() interface{}
+	types []reflect.Type
+	ctx   context.Context
 }
 
 func WithContext(ctx context.Context) *Injector {
@@ -41,20 +43,71 @@ func FromContext(ctx context.Context) *Injector {
 
 func GetValue[T any](i *Injector) (*T, error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
-	key := t.String()
+	key := getName(t)
 	// Fetch the value from the map using the key.
 	getter, ok := i.data[key]
 	if !ok {
-		return nil, fmt.Errorf("key %s not found in map", key)
+		isInterface := t.Kind() == reflect.Interface
+
+		if isInterface {
+			targets := getTypesThatImplement(i.types, t)
+
+			if len(targets) != 1 {
+				return nil, fmt.Errorf("dependency not found and/or no single entry implements interface %s", key)
+			} else {
+				ikey := getName(targets[0])
+				getter, ok = i.data[ikey]
+
+				if !ok {
+					return nil, fmt.Errorf("unable to satisfy dependency implementing interface %s with type %s", key, ikey)
+				}
+			}
+		} else {
+			return nil, fmt.Errorf("dependency not found %s", key)
+		}
 	}
 
-	// Cast the value to the desired type.
-	typedVal, ok := getter().(T)
-	if !ok {
-		return nil, fmt.Errorf("value for key %s is not of type %T", key, typedVal)
+	value := getter()
+
+	tv := reflect.TypeOf(value)
+
+	if tv.Kind() == reflect.Ptr {
+		// Cast the value to the desired pointer type.
+		typedVal, ok := value.(*T)
+		if !ok {
+			return nil, fmt.Errorf("value for key %s is not of pointer type %T", key, typedVal)
+		}
+
+		return typedVal, nil
+	} else {
+		// Cast the value to the desired type.
+		typedVal, ok := value.(T)
+		if !ok {
+			return nil, fmt.Errorf("value for key %s is not of type %T", key, typedVal)
+		}
+
+		return &typedVal, nil
+	}
+}
+
+func getName(t reflect.Type) string {
+	if t.Kind() == reflect.Ptr {
+		// We don't want the `*` in case this is a pointer  otherwise if passing
+		// by a pointer or value the events will be different.
+		return strings.TrimPrefix(t.Elem().String(), "*")
 	}
 
-	return &typedVal, nil
+	return t.String()
+}
+
+func getTypesThatImplement(types []reflect.Type, i reflect.Type) []reflect.Type {
+	var implementingTypes []reflect.Type
+	for _, t := range types {
+		if t.Implements(i) {
+			implementingTypes = append(implementingTypes, t)
+		}
+	}
+	return implementingTypes
 }
 
 func GetValueFromContext[T any](ctx context.Context) (*T, error) {
@@ -62,7 +115,11 @@ func GetValueFromContext[T any](ctx context.Context) (*T, error) {
 }
 
 func (i *Injector) SetSingleton(value interface{}) *Injector {
-	key := reflect.TypeOf(value).String()
+	t := reflect.TypeOf(value)
+
+	i.types = append(i.types, t)
+
+	key := getName(t)
 
 	i.data[key] = func() interface{} {
 		return value
@@ -75,7 +132,9 @@ func (i *Injector) SetFactory(factory interface{}) *Injector {
 	fn := reflect.ValueOf(factory)
 	returnType := fn.Type().Out(0)
 
-	key := returnType.String()
+	i.types = append(i.types, returnType)
+
+	key := getName(returnType)
 
 	i.data[key] = func() interface{} {
 		returnValues := fn.Call(nil)
