@@ -32,6 +32,18 @@ type YetAnotherTypeWithInterface struct {
 	message string
 }
 
+func NewYetAnotherTypeWithInterface(message string) SomeInterface {
+	return YetAnotherTypeWithInterface{
+		message: message,
+	}
+}
+
+func NewYetAnotherTypeWithInterfacePtr(message string) SomeInterface {
+	return &YetAnotherTypeWithInterface{
+		message: message,
+	}
+}
+
 func (t YetAnotherTypeWithInterface) SomeMethod() string { return t.message }
 
 func TestWithContext_Singleton(t *testing.T) {
@@ -184,5 +196,43 @@ func TestWithContext_Singleton_WithNoSingleInterface(t *testing.T) {
 
 	if err == nil {
 		t.Errorf("Should have failed")
+	}
+}
+
+func TestWithContext_Singleton_WithInterfaceAndConstructorWithInterface(t *testing.T) {
+	injector := WithContext(nil)
+	injector.SetSingleton(NewYetAnotherTypeWithInterface("Hello EDT!"))
+
+	value, err := GetValue[SomeInterface](injector)
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if (*value).SomeMethod() != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", (*value).SomeMethod())
+	}
+}
+
+func TestWithContext_Singleton_WithInterfaceAndConstructorWithInterfacePtr(t *testing.T) {
+	injector := WithContext(nil)
+	injector.SetSingleton(NewYetAnotherTypeWithInterfacePtr("Hello EDT!"))
+
+	value, err := GetValue[SomeInterface](injector)
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if (*value).SomeMethod() != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", (*value).SomeMethod())
 	}
 }

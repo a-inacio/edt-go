@@ -43,12 +43,13 @@ func FromContext(ctx context.Context) *Injector {
 
 func GetValue[T any](i *Injector) (*T, error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
+	isInterface := t.Kind() == reflect.Interface
+
 	key := getName(t)
+
 	// Fetch the value from the map using the key.
 	getter, ok := i.data[key]
 	if !ok {
-		isInterface := t.Kind() == reflect.Interface
-
 		if isInterface {
 			targets := getTypesThatImplement(i.types, t)
 
@@ -71,7 +72,7 @@ func GetValue[T any](i *Injector) (*T, error) {
 
 	tv := reflect.TypeOf(value)
 
-	if tv.Kind() == reflect.Ptr {
+	if !isInterface && tv.Kind() == reflect.Ptr {
 		// Cast the value to the desired pointer type.
 		typedVal, ok := value.(*T)
 		if !ok {
