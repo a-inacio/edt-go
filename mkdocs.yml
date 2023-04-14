@@ -70,6 +70,7 @@ nav:
       - expectable.md
       - expirable.md
   - Getting Started: getting-started.md
+  - A Golang primer: a-golang-primer.md
 
 copyright: |
   &copy; 2023 <a href="https://github.com/a-inacio"  target="_blank" rel="noopener">António Inácio</a>
