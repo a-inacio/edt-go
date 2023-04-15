@@ -284,7 +284,93 @@ Though still academic, this example should give you a better understanding about
 
 ### Switch case statement on steroids
 
-🚧
+In Go, the switch statement is a versatile control structure, with unique features that familiarity with other languages might leave  one at loss when having a first contact. The keyword is `select` and this is the least odd difference one might spot.
+
+Take the following example, many other languages offer equivalent behavior:
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    name := "Gopher"
+    switch name {
+    case "Gopher":
+        fmt.Println("Hello, Gopher!")
+    case "World":
+        fmt.Println("Hello, World!")
+    default:
+        fmt.Println("Hello, stranger!")
+    }
+}
+```
+
+What makes Go special is the capability of dealing with channels, so this statement is crucial to work with such data structures.
+
+Take the following example:
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+)
+
+func main() {
+    ch1 := make(chan string)
+    ch2 := make(chan int)
+
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+    go func() {
+        defer close(ch1)
+        ch1 <- "Hello"
+    }()
+
+    go func() {
+        defer close(ch2)
+        ch2 <- 42
+    }()
+
+    count := 2
+
+    // when the count reach 0, cancel the context
+    go func() {
+        for {
+            if count == 0 {
+                break
+            }
+        }
+        cancel()
+    }()
+
+    for {
+        select {
+        case msg, ok := <-ch1:
+            if ok {
+                fmt.Println("Received number from ch1:", msg)
+            } else {
+                count--
+            }
+        case num, ok := <-ch2:
+            if ok {
+                fmt.Println("Received number from ch2:", num)
+            } else {
+                count--
+            }
+        case <-ctx.Done():
+            fmt.Println("All channels closed")
+            return
+        }
+    }
+}
+```
+
+In a nutshell, the previous example uses two channels to send messages and when both are closed we issue a cancellation on a context that it is then utilised to stop the execution.
+
+Notice how it can be verified when a channel becomes closed.
 
 ## Closures
 
