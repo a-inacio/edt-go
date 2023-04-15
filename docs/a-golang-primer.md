@@ -4,7 +4,7 @@ To make the most of this library, it's essential to have a solid understanding o
 
 It is out of scope of this document to provide a complete Go tutorial, it is expected that you have some familiarity already or have other means to cover that requirement.
 
-This document aims to bring your attention to the key aspects.
+This document aims to bring your attention to key aspects.
 
 ## Coroutines
 
@@ -51,6 +51,30 @@ The functions `foo` and `bar` are executed in parallel, just by utilising the na
 > ⚠️ Please note that using a `time.Sleep`, to assume that both functions had enough time to complete, is an improper way of solving the problem.
 > The idea is to avoid including other concepts simultaneously.
 
+### Awaitable
+
+This library offers a construct, the `awaitable`, that specially relies on goroutines under the hood and fulfils the need of running something in parallel to latter retrieve a result.
+
+It is not the aim of this library to hide the power and quirks of Go, but it is a common pattern that invariably requires a combination of techniques to achieve the wanted behavior.
+
+Take the following example:
+```go
+func main(){
+    ...
+    
+    awaitable := AwaitFor(nil, expirable.NewBuilder().
+        FromOperation(func(ctx context.Context) (action.Result, error) {
+            time.Sleep(1 * time.Second)
+            return 42, nil
+        }).
+        Go)
+
+    ...
+    
+    res, err := GetValue[int](awaitable)
+}
+```
+
 ## Wait Groups
 
 Wait Groups are a mechanism to allow any other goroutine to wait for a group of goroutines to complete before continuing execution.
@@ -62,43 +86,43 @@ package main
 import (
     "fmt"
     "sync"
-	"time"
+    "time"
 )
 
 func foo(wg *sync.WaitGroup) {
     for i := 0; i < 5; i++ {
         fmt.Println("Foo:", i)
-		time.Sleep(100 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
-	wg.Done()
+    wg.Done()
 }
 
 func bar(wg *sync.WaitGroup) {
     for i := 0; i < 5; i++ {
         fmt.Println("Bar:", i)
-		time.Sleep(100 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
-	wg.Done()
+    wg.Done()
 }
 
 func main() {
-	// Define a wait group...
+    // Define a wait group...
     var wg sync.WaitGroup
-	// ... with 2 slots
+    // ... with 2 slots
     wg.Add(2)
-	
-	// Start the operations in parallel
+    
+    // Start the operations in parallel
     go foo(&wg)
     go bar(&wg)
-	
-	// Wait for completion
+    
+    // Wait for completion
     wg.Wait()
-	
+    
     fmt.Println("Done!")
 }
 ```
 
-You will not likley be often required to rely on Wait Groups, with this library because most of the constructs make your life easier with concurrency or by communicating between constructs running in the background or in parallel.
+You will not likely be often required to rely on Wait Groups interacting with this library. Most of the constructs make your life easier with concurrency or by communicating between them, even if running in the background or in parallel.
 
 One use case, however, is if you want to be sure that when publishing an event, into the `eventhub.EventHub` construct, all subscribers got the chance to execute until completion.
 
@@ -107,10 +131,10 @@ One use case, however, is if you want to be sure that when publishing an event, 
 e.g.:
 ```go
 func main(){
-	...
+    ...
     wg := hub.Publish(SomeEvent{}, nil)
 
-	// Wait for all subscribers to complete their execution
+    // Wait for all subscribers to complete their execution
     wg.Wait()
 }
 ```
@@ -127,38 +151,38 @@ package main
 import (
     "fmt"
     "sync"
-	"time"
+    "time"
 )
 
 func foo(wg *sync.WaitGroup) {
-	defer wg.Done()
+    defer wg.Done()
     for i := 0; i < 5; i++ {
         fmt.Println("Foo:", i)
-		time.Sleep(100 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
 }
 
 func bar(wg *sync.WaitGroup) {
-	defer wg.Done()
+    defer wg.Done()
     for i := 0; i < 5; i++ {
         fmt.Println("Bar:", i)
-		time.Sleep(100 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
 }
 
 func main() {
-	// Define a wait group...
+    // Define a wait group...
     var wg sync.WaitGroup
-	// ... with 2 slots
+    // ... with 2 slots
     wg.Add(2)
-	
-	// Start the operations in parallel
+    
+    // Start the operations in parallel
     go foo(&wg)
     go bar(&wg)
-	
-	// Wait for completion
+    
+    // Wait for completion
     wg.Wait()
-	
+    
     fmt.Println("Done!")
 }
 ```
@@ -176,37 +200,37 @@ package main
 import (
     "fmt"
     "sync"
-	"time"
+    "time"
 )
 
 func foo(ch chan<- bool) {
     for i := 0; i < 5; i++ {
         fmt.Println("Foo:", i)
-		time.Sleep(100 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
-	ch <- true
+    ch <- true
 }
 
 func bar(ch chan<- bool) {
     for i := 0; i < 5; i++ {
         fmt.Println("Bar:", i)
-		time.Sleep(100 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
-	ch <- true
+    ch <- true
 }
 
 func main() {
-	// Define a channel
-	ch := make(chan bool)
-	
-	// Start the operations in parallel
+    // Define a channel
+    ch := make(chan bool)
+    
+    // Start the operations in parallel
     go foo(ch)
     go bar(ch)
-	
-	// Wait for completion
-	<-ch
-	<-ch
-	
+    
+    // Wait for completion
+    <-ch
+    <-ch
+    
     fmt.Println("Done!")
 }
 ```
@@ -228,10 +252,10 @@ import (
 )
 
 func main() {
-	// a wait group to wait for all results
+    // a wait group to wait for all results
     var wg sync.WaitGroup
 
-	// a channel to pass by resuld
+    // a channel to pass by resuld
     ch := make(chan int)
 
     // launch 5 goroutines for calculating the square route of a number
