@@ -51,30 +51,6 @@ The functions `foo` and `bar` are executed in parallel, just by utilising the na
 > ⚠️ Please note that using a `time.Sleep`, to assume that both functions had enough time to complete, is an improper way of solving the problem.
 > The idea is to avoid including other concepts simultaneously.
 
-### Awaitable
-
-This library offers a construct, the `awaitable`, that specially relies on goroutines under the hood and fulfils the need of running something in parallel to latter retrieve a result.
-
-It is not the aim of this library to hide the power and quirks of Go, but it is a common pattern that invariably requires a combination of techniques to achieve the wanted behavior.
-
-Take the following example:
-```go
-func main(){
-    ...
-    
-    awaitable := AwaitFor(nil, expirable.NewBuilder().
-        FromOperation(func(ctx context.Context) (action.Result, error) {
-            time.Sleep(1 * time.Second)
-            return 42, nil
-        }).
-        Go)
-
-    ...
-    
-    res, err := GetValue[int](awaitable)
-}
-```
-
 ## Wait Groups
 
 Wait Groups are a mechanism to allow any other goroutine to wait for a group of goroutines to complete before continuing execution.
@@ -138,6 +114,10 @@ func main(){
     wg.Wait()
 }
 ```
+
+## Closures
+
+🚧
 
 ## Defer
 
@@ -320,6 +300,80 @@ import (
 func main() {
     ch1 := make(chan string)
     ch2 := make(chan int)
+	ch3 := make(chan bool)
+
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+    go func() {
+        defer close(ch1)
+        ch1 <- "Hello"
+    }()
+
+    go func() {
+        defer close(ch2)
+        ch2 <- 42
+    }()
+
+    count := 2
+
+	defer close(ch3)
+    // when the count reach 0, cancel the context
+    go func() {
+        for {
+            if count == 0 {
+                break
+            }
+        }
+		ch3 <- true
+    }()
+
+    for {
+        select {
+        case msg, ok := <-ch1:
+            if ok {
+                fmt.Println("Received number from ch1:", msg)
+            } else {
+                count--
+            }
+        case num, ok := <-ch2:
+            if ok {
+                fmt.Println("Received number from ch2:", num)
+            } else {
+                count--
+            }
+        case <-ch3:
+            fmt.Println("All channels closed")
+            return
+        }
+    }
+}
+```
+
+In a nutshell, the previous example uses two channels to send messages and when both are closed we send another message to stop the execution.
+
+> 👉 Notice how it can be verified when a channel becomes closed.
+
+## Context
+
+🚧
+
+### Cancellation
+
+🚧
+
+Take the following example:
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+)
+
+func main() {
+    ch1 := make(chan string)
+    ch2 := make(chan int)
 
     ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
@@ -370,29 +424,16 @@ func main() {
 
 In a nutshell, the previous example uses two channels to send messages and when both are closed we issue a cancellation on a context that it is then utilised to stop the execution.
 
-Notice how it can be verified when a channel becomes closed.
-
-## Closures
-
-🚧
-
-## Context
-
-🚧
-
-### Passing values
-
-🚧
-
-### Cancellation
-
-🚧
 
 ### Timeouts
 
 🚧
 
 ### Interrupts
+
+🚧
+
+### Passing values
 
 🚧
 
