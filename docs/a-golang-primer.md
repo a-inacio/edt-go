@@ -293,66 +293,72 @@ Take the following example:
 package main
 
 import (
-    "context"
-    "fmt"
+	"fmt"
 )
 
 func main() {
-    ch1 := make(chan string)
-    ch2 := make(chan int)
+	ch1 := make(chan string)
+	ch2 := make(chan int)
 	ch3 := make(chan bool)
 
-    ctx, cancel := context.WithCancel(context.Background())
-    defer cancel()
+	go func() {
+		defer close(ch1)
+		ch1 <- "Hello"
+	}()
 
-    go func() {
-        defer close(ch1)
-        ch1 <- "Hello"
-    }()
+	go func() {
+		defer close(ch2)
+		ch2 <- 42
+	}()
 
-    go func() {
-        defer close(ch2)
-        ch2 <- 42
-    }()
-
-    count := 2
+	ch1Closed := false
+	ch2Closed := false
 
 	defer close(ch3)
-    // when the count reach 0, cancel the context
-    go func() {
-        for {
-            if count == 0 {
-                break
-            }
-        }
-		ch3 <- true
-    }()
 
-    for {
-        select {
-        case msg, ok := <-ch1:
-            if ok {
-                fmt.Println("Received number from ch1:", msg)
-            } else {
-                count--
-            }
-        case num, ok := <-ch2:
-            if ok {
-                fmt.Println("Received number from ch2:", num)
-            } else {
-                count--
-            }
-        case <-ch3:
-            fmt.Println("All channels closed")
-            return
-        }
-    }
+	// when the count reach 0, cancel the context
+	go func() {
+		for {
+			if ch1Closed && ch2Closed {
+				break
+			}
+		}
+
+		ch3 <- true
+	}()
+
+	for {
+		select {
+		case msg, ok1 := <-ch1:
+			if ok1 {
+				fmt.Println("Received number from ch1:", msg)
+			} else {
+				fmt.Println("Channel 1 closed")
+				ch1Closed = true
+			}
+		case num, ok2 := <-ch2:
+			if ok2 {
+				fmt.Println("Received number from ch2:", num)
+			} else {
+				fmt.Println("Channel 2 closed")
+				ch2Closed = true
+			}
+		case <-ch3:
+			fmt.Println("All channels closed")
+			return
+		}
+	}
 }
 ```
 
 In a nutshell, the previous example uses two channels to send messages and when both are closed we send another message to stop the execution.
 
-> 👉 Notice how it can be verified when a channel becomes closed.
+> ⚠️ Notice how it can be verified when a channel becomes closed and how he are using it to toggle the flags.
+> 
+> One might consider using a counter, keeping track of the open channels, when reaching 0 it could be utilised to signal termination. You might be surprised that the messages stating that a channel got called can be called multiple times.
+> Be aware of this behaviour!
+> 
+> Also, please understand this is just for illustrating purposes, it would not be a good implementation of an Parallel Aggregation pattern neither the proper way to deal with cancellation.
 
 ## Context
 
