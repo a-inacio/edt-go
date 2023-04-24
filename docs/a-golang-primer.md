@@ -9,7 +9,7 @@ This document aims to bring your attention to key aspects.
 ## Coroutines
 
 Coroutines (aka goroutines) are lightweight threads of execution, managed by the Go runtime instead of the OS.
-Therefore, concurrent programming is natively supported. Communication can be achieved with `channels`.
+Therefore, concurrent programming is natively supported. Communication is commonly achieved with `channels`.
 
 Take the following naive example:
 ```go
@@ -123,7 +123,7 @@ func main(){
 
 The `defer` statement in Go allows you to schedule a function call to be executed later, when the surrounding function completes. It is often used to ensure that some cleanup code is executed after a function completes, regardless of the path that led to the function's exit.
 
-Take this revised example where the defer is utilised to signal the wait group the function completed its execution:
+Take this revised example where the `defer` statement is utilised to signal the wait group the function completed its execution:
 
 ```go
 package main
@@ -356,9 +356,9 @@ In a nutshell, the previous example uses two channels to send messages and when 
 > ⚠️ Notice how it can be verified when a channel becomes closed and how he are using it to toggle the flags.
 > 
 > One might consider using a counter, keeping track of the open channels, when reaching 0 it could be utilised to signal termination. You might be surprised that the messages stating that a channel got called can be called multiple times.
-> Be aware of this behaviour!
+> Be aware of this behavior!
 > 
-> Also, please understand this is just for illustrating purposes, it would not be a good implementation of an Parallel Aggregation pattern neither the proper way to deal with cancellation.
+> Also, please understand this is just for illustrating purposes, it would not be a good implementation of a Parallel Aggregation pattern, neither the proper way to deal with cancellation.
 
 ## Context
 

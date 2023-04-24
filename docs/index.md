@@ -16,7 +16,7 @@ Having common constructs is a great way to improve your code.
 Go has very powerful language capabilities for parallelism and exchanging data, like `coroutines` and `channels`. Such native language constructs reduce immensely the complexity of some tasks but it is equally easy to produce messy code if there is not some effort made into readability.
 This library aims for that particular goal: Making code readable, simpler and, consequently, improve the overall Code Quality.
 
-> ⚠️ Disclaimer: Go is a very elegant language, there is no hidden claim saying that code produced in this language is prone to get messy. Newcomers might, however, become overwhelmed with some capabilities and use them wrongly. 
+> ⚠️ Disclaimer: There is no hidden claim trying to imply that code produced in this language is prone to get messy. By the contrary, Go is a very elegant language. Newcomers might however, become overwhelmed with some capabilities or use them ineffectively. 
 
 ### Event Hub
 
@@ -32,4 +32,4 @@ What also makes this library special is that most Constructs work well together.
 ### Leveraging from Go
 
 This library is intended to leverage from Go, not just hide "features that might look scary for new developers" under useless abstractions.
-It is actually important to have a clear understanding of such language capabilities to effectively utilise EDT.
+It is actually important to have a clear understanding of this language capabilities to effectively utilise EDT.

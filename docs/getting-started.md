@@ -9,7 +9,7 @@ got get -u github.com/a-inacio/edt-go
 ## Exploring the Constructs
 
 This library implements a bunch of "Design Patterns", so you will want to understand their roles and how they fit together in order to leverage from this toolkit.
-Maybe using the term "Design Pattern" is a bit abusive, so a we will be referring to "Constructs" instead from now on.
+Maybe using the term "Design Pattern" is a bit abusive, so we will be referring to "Constructs" instead from now on.
 
 ### Creational
 These Constructs have the primary purpose of bridging your code with other Constructs:
