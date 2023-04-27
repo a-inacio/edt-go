@@ -403,74 +403,12 @@ In a nutshell, the previous example uses two channels to send messages and when 
 
 ## Context
 
-🚧
+In a nutshell, the standard data structure `context.Context` is essential to manage the lifecycle of long-running operations.
+It is very versatility and heavily used by this library.
 
 ### Cancellation
 
 🚧
-
-Take the following example:
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-)
-
-func main() {
-    ch1 := make(chan string)
-    ch2 := make(chan int)
-
-    ctx, cancel := context.WithCancel(context.Background())
-    defer cancel()
-
-    go func() {
-        defer close(ch1)
-        ch1 <- "Hello"
-    }()
-
-    go func() {
-        defer close(ch2)
-        ch2 <- 42
-    }()
-
-    count := 2
-
-    // when the count reach 0, cancel the context
-    go func() {
-        for {
-            if count == 0 {
-                break
-            }
-        }
-        cancel()
-    }()
-
-    for {
-        select {
-        case msg, ok := <-ch1:
-            if ok {
-                fmt.Println("Received number from ch1:", msg)
-            } else {
-                count--
-            }
-        case num, ok := <-ch2:
-            if ok {
-                fmt.Println("Received number from ch2:", num)
-            } else {
-                count--
-            }
-        case <-ctx.Done():
-            fmt.Println("All channels closed")
-            return
-        }
-    }
-}
-```
-
-In a nutshell, the previous example uses two channels to send messages and when both are closed we issue a cancellation on a context that it is then utilised to stop the execution.
-
 
 ### Timeouts
 
