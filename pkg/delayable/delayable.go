@@ -27,3 +27,9 @@ func RunAfter(ctx context.Context, delay time.Duration, a action.Action) (action
 		FromAction(a).
 		WithDelay(delay).Go(ctx)
 }
+
+func WaitFor(ctx context.Context, delay time.Duration) (action.Result, error) {
+	return NewBuilder().
+		FromAction(action.DoNothing).
+		WithDelay(delay).Go(ctx)
+}
