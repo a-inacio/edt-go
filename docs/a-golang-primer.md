@@ -1,12 +1,22 @@
 # A Golang primer
 
-To make the most of this library, it's essential to have a solid understanding of Go's capabilities. Familiarity with certain language and standard library features is crucial for achieving this goal.
+To make the most out of this library, it's essential to have a solid understanding of Go's capabilities. Familiarity with certain language and standard library features is crucial for achieving this goal.
 
 It is out of scope of this document to provide a complete Go tutorial, it is expected that you have some familiarity already or have other means to cover that requirement.
 
-This document aims to bring your attention to key aspects.
+This document aims to bring your attention to key aspects only.
 
-## Coroutines
+## Functions
+
+Functions in Go have a key part in the language design philosophy:
+
+- Can return multiple values.
+- Are first-class citizens (in short, they are treated as any other data type, thus assignable to a variable).
+- Can be defined as closures, thus capturing surrounding declared variables that can be accessed and modified even after the surrounding function returned.
+- Variable number of arguments with the ellipsis syntax (`...`).
+- Return values can be named
+
+### Coroutines
 
 Coroutines (aka goroutines) are lightweight threads of execution, managed by the Go runtime instead of the OS.
 Therefore, concurrent programming is natively supported. Communication is commonly achieved with `channels`.
@@ -50,6 +60,91 @@ The functions `foo` and `bar` are executed in parallel, just by utilising the na
 
 > ⚠️ Please note that using a `time.Sleep`, to assume that both functions had enough time to complete, is an improper way of solving the problem.
 > The idea is to avoid including other concepts simultaneously.
+
+### Closures
+
+Combined with the fact that functions in Go are first-class citizens, closures are a language feature that bring a lot of power and flexibility.
+With such capability, it becomes possible to create functions that capture and maintain a state, behave like objects, facilitate functional and concurrency logic.
+
+Take the following example, that defines a simple sequencer:
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func sequencer() func() int {
+    i := 0
+    return func () int {
+        i++
+        return i
+    }
+}
+
+func main() {
+    seq1 := sequencer()
+
+    fmt.Println(seq1()) // prints 1
+    fmt.Println(seq1()) // prints 2
+    fmt.Println(seq1()) // prints 3
+
+    seq2 := sequencer()
+    fmt.Println(seq2()) // prints 1
+}
+```
+
+With this library you will often be leveraging from this language feature, by passing anonymous functions over. Such approach will require to follow a certain signature but will simplify integrating your code seamlessly without too much boilerplate or obscure code.
+
+### Defer
+
+The `defer` statement in Go allows you to schedule a function call to be executed later, when the surrounding function completes. It is often used to ensure that some cleanup code is executed after a function completes, regardless of the path that led to the function's exit.
+
+Take this revised example where the `defer` statement is utilised to signal the wait group the function completed its execution:
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+func foo(wg *sync.WaitGroup) {
+    defer wg.Done()
+    for i := 0; i < 5; i++ {
+        fmt.Println("Foo:", i)
+        time.Sleep(100 * time.Millisecond)
+    }
+}
+
+func bar(wg *sync.WaitGroup) {
+    defer wg.Done()
+    for i := 0; i < 5; i++ {
+        fmt.Println("Bar:", i)
+        time.Sleep(100 * time.Millisecond)
+    }
+}
+
+func main() {
+    // Define a wait group...
+    var wg sync.WaitGroup
+    // ... with 2 slots
+    wg.Add(2)
+    
+    // Start the operations in parallel
+    go foo(&wg)
+    go bar(&wg)
+    
+    // Wait for completion
+    wg.Wait()
+    
+    fmt.Println("Done!")
+}
+```
+
+This example is too simple to show the real value of using `defer`, but it tries to illustrate it's purpose. With this mechanism you can be rest assured that, when the function terminates, the statement will always be executed. A more complex execution pattern, with multiple return points, would show off better the value of this statement (since you would not be hard-pressed, to make sure in each return block, the wait group is signalled properly).
 
 ## Wait Groups
 
@@ -114,60 +209,6 @@ func main(){
     wg.Wait()
 }
 ```
-
-## Closures
-
-🚧
-
-## Defer
-
-The `defer` statement in Go allows you to schedule a function call to be executed later, when the surrounding function completes. It is often used to ensure that some cleanup code is executed after a function completes, regardless of the path that led to the function's exit.
-
-Take this revised example where the `defer` statement is utilised to signal the wait group the function completed its execution:
-
-```go
-package main
-
-import (
-    "fmt"
-    "sync"
-    "time"
-)
-
-func foo(wg *sync.WaitGroup) {
-    defer wg.Done()
-    for i := 0; i < 5; i++ {
-        fmt.Println("Foo:", i)
-        time.Sleep(100 * time.Millisecond)
-    }
-}
-
-func bar(wg *sync.WaitGroup) {
-    defer wg.Done()
-    for i := 0; i < 5; i++ {
-        fmt.Println("Bar:", i)
-        time.Sleep(100 * time.Millisecond)
-    }
-}
-
-func main() {
-    // Define a wait group...
-    var wg sync.WaitGroup
-    // ... with 2 slots
-    wg.Add(2)
-    
-    // Start the operations in parallel
-    go foo(&wg)
-    go bar(&wg)
-    
-    // Wait for completion
-    wg.Wait()
-    
-    fmt.Println("Done!")
-}
-```
-
-This example is too simple to show the real value of using `defer`, but it tries to illustrate it's purpose. With this mechanism you can be rest assured that, when the function terminates, the statement will always be executed. A more complex execution pattern, with multiple return points, would show off better the value of this statement (since you would not be hard-pressed, to make sure in each return block, the wait group is signalled properly).
 
 ## Channels
 
