@@ -486,4 +486,59 @@ In a nutshell, the previous example uses two channels to send messages and when 
 
 ## Handling Time
 
-🚧
+There are certainly a lot to say about handling "Time" in Go, but we will only focus on the key aspects that matter most for EDT.
+
+### Duration
+
+A duration (or `time.Duration`) is utilised to express a length of time that can perhaps represent a delay or a timeout (depending on the context it is applied).
+This standard data structure has a key part in most of EDT's constructs.
+
+If passing down hardcoded values you will be doing expressions like:
+ - `100 * time.Millisecond` (100ms)
+ - `5 * time.Decond` (5s)
+
+What might be something you need to do, that might not be easy to remember is doing the same but with a variable (lets say you refactor your code and instead of the hardcoded value you start using an environment variable for it).
+
+Take the following snippet:
+```go
+import "time"
+
+var durationInSeconds int = 5
+duration := time.Duration(durationInSeconds) * time.Second
+```
+
+### Delay
+
+If enforcing a delay, on a certain behavior you are better avoiding, most of the time, the usage of `time.Sleep` due to its blocking nature of the goroutine.
+Prefer the usage of `time.After` instead, since it relies on a channel that you can combine with other channels and, most importantly, a cancellation context.
+
+This technique is relevant for dealing properly with graceful (and quick) shutdowns of your application.
+
+Take the following example:
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "time"
+)
+
+func main() {
+    // Create a cancellation context with a timeout of 2 seconds
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+    defer cancel()
+
+    fmt.Println("Starting the timer")
+
+    // Wait for either the context to be cancelled or the timer to expire
+    select {
+    case <-ctx.Done():
+        fmt.Println("Cancelled:", ctx.Err())
+    case <-time.After(5 * time.Second):
+        fmt.Println("Timer expired")
+    }
+}
+```
+
+> 👉This library will assist you in common patterns dealing with time delays facilitating the usage of context propagation.
