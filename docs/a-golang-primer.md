@@ -406,21 +406,78 @@ In a nutshell, the previous example uses two channels to send messages and when 
 In a nutshell, the standard data structure `context.Context` is essential to manage the lifecycle of long-running operations.
 It is very versatility and heavily used by this library.
 
+This section does not intend to be exhaustive in the topic, only bring awareness to key aspects.
+
 ### Cancellation
 
-🚧
+Dealing with cancellation is paramount to EDT and the most relevant use cases are:
+- Timeouts / Deadline enforcement
+- Graceful shutdown
 
-### Timeouts
+#### Timeouts / Deadline enforcement
 
-🚧
+The distinction between a timeout and deadline is that the latter is defined by an exact point in time for it to be enforced, rather than setting a duration that must elapse for the cancellation condition to be met. 
+For time based cancellation this library offers constructs that assist on this concept (e.g. `Expirable` and `Delayable`).
 
-### Interrupts
+A timeout based cancellation:
+```go
+parent := context.Background()
+ctx, cancel := context.WithTimeout(parent, 10*time.Second)
+defer cancel()
+```
 
-🚧
+A deadline based cancellation:
+```go
+parent := context.Background()
+ctx, cancel := context.WithDeadline(parent, time.Now().Add(10*time.Second))
+defer cancel()
+```
 
-### Passing values
+Effectively both samples have equivalent behavior (it is just a matter of expressiveness that might best fit a use case or another).
 
-🚧
+#### Graceful shutdown
+
+This behavior can be achieved by hooking the `os.Interrupta`, the standard library provides a convenient decorator that does exactly that:
+
+```go
+ctx, cancel := context.WithSignal(context.Background(), os.Interrupt)
+defer cancel()
+```
+This library provides you a construct (`Director`) that assists with this responsibility, but it is important to be aware about this recipe in case you have a strong reason for not propagating the scope.
+
+### Data Propagation
+
+In Go, the `context.Context` fulfils an important role by providing a standard way to propagate request-scoped values (or just call it data) across different parts of a program.
+There are plenty of use cases where this mechanism can be of use to avoid passing down explicit parameters with specific types across multiple layers so a parameter can be of utilised only on a limited or even single pipeline execution stage (e.g. image getting an authenticate user on a HTTP request, passing it down as a context so a certain authorization verification can be made at a certain Service).
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+)
+
+func main() {
+	ctx := context.WithValue(context.Background(), "userID", "42")
+
+	doSomething(ctx)
+}
+
+func doSomething(ctx context.Context) {
+    userID, ok := ctx.Value("userID").(string)
+	
+    if !ok {
+        log.Println("No user defined")
+        return
+    }
+
+    log.Println("Doing something for user", userID)
+}
+```
+
+> 👉 This library offers you a construct, the `Injector`, that rely on this very same mechanism. You will get, however, a more convenient and powerful way to retrieve values from your context, by satisfying dependencies. 
+
 
 ## Handling Time
 
@@ -479,4 +536,4 @@ func main() {
 }
 ```
 
-> 👉This library will assist you in common patterns dealing with time delays facilitating the usage of context propagation.
+> 👉 This library will assist you in common patterns dealing with time delays facilitating the usage of context propagation.
