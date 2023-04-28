@@ -43,9 +43,74 @@ func FromContext(ctx context.Context) *Injector {
 
 func GetValue[T any](i *Injector) (*T, error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
-	isInterface := t.Kind() == reflect.Interface
 
+	value, err := i.getValue(t)
+	if err != nil {
+		return nil, err
+	}
+
+	tv := reflect.TypeOf(value)
+
+	if t.Kind() != reflect.Interface && tv.Kind() == reflect.Ptr {
+		// Cast the value to the desired pointer type.
+		typedVal, ok := value.(*T)
+		if !ok {
+			return nil, fmt.Errorf("value for key %s is not of pointer type %T", getName(t), typedVal)
+		}
+
+		return typedVal, nil
+	} else {
+		// Cast the value to the desired type.
+		typedVal, ok := value.(T)
+		if !ok {
+			return nil, fmt.Errorf("value for key %s is not of type %T", getName(t), typedVal)
+		}
+
+		return &typedVal, nil
+	}
+}
+
+func GetValueFromContext[T any](ctx context.Context) (*T, error) {
+	return GetValue[T](FromContext(ctx))
+}
+
+func (i *Injector) SetSingleton(value interface{}) *Injector {
+	t := reflect.TypeOf(value)
+
+	if isTypeFunc(t) {
+		i.setSingletonFunc(value)
+	} else {
+		i.setSingletonValue(value, t)
+	}
+
+	return i
+}
+
+func (i *Injector) SetFactory(factory interface{}) *Injector {
+	if isTypeFunc(reflect.TypeOf(factory)) {
+		fn, returnType := getFuncReturnValue(factory)
+
+		i.types = append(i.types, returnType)
+
+		key := getName(returnType)
+
+		i.data[key] = func() interface{} {
+			returnValues := fn.Call(nil)
+			return returnValues[0].Interface()
+		}
+	}
+
+	return i
+}
+
+func (i *Injector) Context() context.Context {
+	return i.ctx
+}
+
+func (i *Injector) getValue(t reflect.Type) (interface{}, error) {
 	key := getName(t)
+
+	isInterface := t.Kind() == reflect.Interface
 
 	// Fetch the value from the map using the key.
 	getter, ok := i.data[key]
@@ -68,27 +133,7 @@ func GetValue[T any](i *Injector) (*T, error) {
 		}
 	}
 
-	value := getter()
-
-	tv := reflect.TypeOf(value)
-
-	if !isInterface && tv.Kind() == reflect.Ptr {
-		// Cast the value to the desired pointer type.
-		typedVal, ok := value.(*T)
-		if !ok {
-			return nil, fmt.Errorf("value for key %s is not of pointer type %T", key, typedVal)
-		}
-
-		return typedVal, nil
-	} else {
-		// Cast the value to the desired type.
-		typedVal, ok := value.(T)
-		if !ok {
-			return nil, fmt.Errorf("value for key %s is not of type %T", key, typedVal)
-		}
-
-		return &typedVal, nil
-	}
+	return getter(), nil
 }
 
 func getName(t reflect.Type) string {
@@ -101,6 +146,30 @@ func getName(t reflect.Type) string {
 	return t.String()
 }
 
+func isTypeFunc(t reflect.Type) bool {
+	if t.Kind() != reflect.Func {
+		return false
+	}
+	name := t.String()
+	if !strings.HasPrefix(name, "func(") {
+		return false
+	}
+
+	return true
+}
+
+func getArgTypes(f interface{}) []reflect.Type {
+	fn := reflect.ValueOf(f)
+	numArgs := fn.Type().NumIn()
+	argTypes := make([]reflect.Type, numArgs)
+
+	for i := 0; i < numArgs; i++ {
+		argTypes[i] = fn.Type().In(i)
+	}
+
+	return argTypes
+}
+
 func getTypesThatImplement(types []reflect.Type, i reflect.Type) []reflect.Type {
 	var implementingTypes []reflect.Type
 	for _, t := range types {
@@ -111,13 +180,7 @@ func getTypesThatImplement(types []reflect.Type, i reflect.Type) []reflect.Type 
 	return implementingTypes
 }
 
-func GetValueFromContext[T any](ctx context.Context) (*T, error) {
-	return GetValue[T](FromContext(ctx))
-}
-
-func (i *Injector) SetSingleton(value interface{}) *Injector {
-	t := reflect.TypeOf(value)
-
+func (i *Injector) setSingletonValue(value interface{}, t reflect.Type) {
 	i.types = append(i.types, t)
 
 	key := getName(t)
@@ -125,26 +188,27 @@ func (i *Injector) SetSingleton(value interface{}) *Injector {
 	i.data[key] = func() interface{} {
 		return value
 	}
-
-	return i
 }
 
-func (i *Injector) SetFactory(factory interface{}) *Injector {
+func (i *Injector) setSingletonFunc(value interface{}) {
+	fn, t := getFuncReturnValue(value)
+
+	fnArgs := getArgTypes(value)
+
+	i.types = append(i.types, t)
+
+	key := getName(t)
+
+	if len(fnArgs) == 0 {
+		i.data[key] = func() interface{} {
+			returnValues := fn.Call(nil)
+			return returnValues[0].Interface()
+		}
+	}
+}
+
+func getFuncReturnValue(factory interface{}) (reflect.Value, reflect.Type) {
 	fn := reflect.ValueOf(factory)
 	returnType := fn.Type().Out(0)
-
-	i.types = append(i.types, returnType)
-
-	key := getName(returnType)
-
-	i.data[key] = func() interface{} {
-		returnValues := fn.Call(nil)
-		return returnValues[0].Interface()
-	}
-
-	return i
-}
-
-func (i *Injector) Context() context.Context {
-	return i.ctx
+	return fn, returnType
 }
