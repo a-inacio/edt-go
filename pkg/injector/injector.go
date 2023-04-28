@@ -95,8 +95,7 @@ func (i *Injector) SetFactory(factory interface{}) *Injector {
 		key := getName(returnType)
 
 		i.data[key] = func() interface{} {
-			returnValues := fn.Call(nil)
-			return returnValues[0].Interface()
+			return i.satisfyDependencies(fn, nil)
 		}
 	}
 
@@ -105,6 +104,37 @@ func (i *Injector) SetFactory(factory interface{}) *Injector {
 
 func (i *Injector) Context() context.Context {
 	return i.ctx
+}
+
+func (i *Injector) satisfyDependencies(fn reflect.Value, args []interface{}) interface{} {
+	var paramValues []reflect.Value = nil
+
+	if args != nil {
+		numArgs := len(args)
+		paramValues = make([]reflect.Value, numArgs)
+		for i := 0; i < numArgs; i++ {
+			paramValues[i] = reflect.ValueOf(args[i])
+		}
+	}
+
+	returnValues := fn.Call(paramValues)
+	return returnValues[0].Interface()
+}
+
+func (i *Injector) getValues(tt []reflect.Type) ([]interface{}, error) {
+	var values []interface{}
+
+	for _, t := range tt {
+		value, err := i.getValue(t)
+
+		if err != nil {
+			return nil, err
+		}
+
+		values = append(values, value)
+	}
+
+	return values, nil
 }
 
 func (i *Injector) getValue(t reflect.Type) (interface{}, error) {
@@ -201,8 +231,17 @@ func (i *Injector) setSingletonFunc(value interface{}) {
 
 	if len(fnArgs) == 0 {
 		i.data[key] = func() interface{} {
-			returnValues := fn.Call(nil)
-			return returnValues[0].Interface()
+			return i.satisfyDependencies(fn, nil)
+		}
+	} else {
+		i.data[key] = func() interface{} {
+			values, err := i.getValues(fnArgs)
+
+			if err != nil {
+				return err
+			}
+
+			return i.satisfyDependencies(fn, values)
 		}
 	}
 }
