@@ -41,33 +41,53 @@ func FromContext(ctx context.Context) *Injector {
 	return i
 }
 
-func GetValue[T any](i *Injector) (*T, error) {
+func GetValueWithContext[T any](i *Injector, ctx context.Context) (*T, error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 
-	value, err := i.getValue(t)
+	value, err := i.getValue(t, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tv := reflect.TypeOf(value)
+	return castValue[T](value, t)
+}
 
-	if t.Kind() != reflect.Interface && tv.Kind() == reflect.Ptr {
-		// Cast the value to the desired pointer type.
-		typedVal, ok := value.(*T)
-		if !ok {
-			return nil, fmt.Errorf("value for key %s is not of pointer type %T", getName(t), typedVal)
+func GetValue[T any](i *Injector) (*T, error) {
+	return GetValueWithContext[T](i, nil)
+}
+
+func Satisfy[T any](i *Injector, f interface{}) (*T, error) {
+	return SatisfyWithAnotherContext[T](i, f, nil)
+}
+
+func SatisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Context) (*T, error) {
+	t := reflect.TypeOf(f)
+
+	if isTypeFunc(t) {
+		value := i.getSatisfiedInterfaceProxy(f, nil)()
+
+		if value == nil {
+			return nil, nil
 		}
 
-		return typedVal, nil
+		return castValue[T](value, t)
 	} else {
-		// Cast the value to the desired type.
-		typedVal, ok := value.(T)
-		if !ok {
-			return nil, fmt.Errorf("value for key %s is not of type %T", getName(t), typedVal)
-		}
-
-		return &typedVal, nil
+		return GetValueWithContext[T](i, ctx)
 	}
+}
+
+func MustSatisfy[T any](i *Injector, f interface{}) *T {
+	return MustSatisfyWithAnotherContext[T](i, f, nil)
+}
+
+func MustSatisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Context) *T {
+	res, err := SatisfyWithAnotherContext[T](i, f, ctx)
+
+	if err != nil {
+		panic(fmt.Sprintf("unable to satisfy interface - %s", err.Error()))
+	}
+
+	return res
 }
 
 func GetValueFromContext[T any](ctx context.Context) (*T, error) {
@@ -121,11 +141,11 @@ func (i *Injector) satisfyDependencies(fn reflect.Value, args []interface{}) int
 	return returnValues[0].Interface()
 }
 
-func (i *Injector) getValues(tt []reflect.Type) ([]interface{}, error) {
+func (i *Injector) getValues(tt []reflect.Type, ctx context.Context) ([]interface{}, error) {
 	var values []interface{}
 
 	for _, t := range tt {
-		value, err := i.getValue(t)
+		value, err := i.getValue(t, ctx)
 
 		if err != nil {
 			return nil, err
@@ -137,7 +157,7 @@ func (i *Injector) getValues(tt []reflect.Type) ([]interface{}, error) {
 	return values, nil
 }
 
-func (i *Injector) getValue(t reflect.Type) (interface{}, error) {
+func (i *Injector) getValue(t reflect.Type, ctx context.Context) (interface{}, error) {
 	key := getName(t)
 
 	isInterface := t.Kind() == reflect.Interface
@@ -158,6 +178,12 @@ func (i *Injector) getValue(t reflect.Type) (interface{}, error) {
 					return nil, fmt.Errorf("unable to satisfy dependency implementing interface %s with type %s", key, ikey)
 				}
 			}
+		} else if isTypeContext(t) {
+			if ctx == nil {
+				ctx = i.Context()
+			}
+
+			return ctx, nil
 		} else {
 			return nil, fmt.Errorf("dependency not found %s", key)
 		}
@@ -174,6 +200,10 @@ func getName(t reflect.Type) string {
 	}
 
 	return t.String()
+}
+
+func isTypeContext(t reflect.Type) bool {
+	return t == reflect.TypeOf((*context.Context)(nil)).Elem()
 }
 
 func isTypeFunc(t reflect.Type) bool {
@@ -221,21 +251,24 @@ func (i *Injector) setSingletonValue(value interface{}, t reflect.Type) {
 }
 
 func (i *Injector) setSingletonFunc(value interface{}) {
+	_, t := getFuncReturnValue(value)
+	i.data[getName(t)] = i.getSatisfiedInterfaceProxy(value, nil)
+}
+
+func (i *Injector) getSatisfiedInterfaceProxy(value interface{}, ctx context.Context) func() interface{} {
 	fn, t := getFuncReturnValue(value)
 
 	fnArgs := getArgTypes(value)
 
 	i.types = append(i.types, t)
 
-	key := getName(t)
-
 	if len(fnArgs) == 0 {
-		i.data[key] = func() interface{} {
+		return func() interface{} {
 			return i.satisfyDependencies(fn, nil)
 		}
 	} else {
-		i.data[key] = func() interface{} {
-			values, err := i.getValues(fnArgs)
+		return func() interface{} {
+			values, err := i.getValues(fnArgs, ctx)
 
 			if err != nil {
 				return err
@@ -250,4 +283,26 @@ func getFuncReturnValue(factory interface{}) (reflect.Value, reflect.Type) {
 	fn := reflect.ValueOf(factory)
 	returnType := fn.Type().Out(0)
 	return fn, returnType
+}
+
+func castValue[T any](value interface{}, t reflect.Type) (*T, error) {
+	tv := reflect.TypeOf(value)
+
+	if t.Kind() != reflect.Interface && tv.Kind() == reflect.Ptr {
+		// Cast the value to the desired pointer type.
+		typedVal, ok := value.(*T)
+		if !ok {
+			return nil, fmt.Errorf("value for key %s is not of pointer type %T", getName(t), typedVal)
+		}
+
+		return typedVal, nil
+	} else {
+		// Cast the value to the desired type.
+		typedVal, ok := value.(T)
+		if !ok {
+			return nil, fmt.Errorf("value for key %s is not of type %T", getName(t), typedVal)
+		}
+
+		return &typedVal, nil
+	}
 }

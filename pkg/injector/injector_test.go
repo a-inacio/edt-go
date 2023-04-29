@@ -113,6 +113,50 @@ func TestWithContext_Singleton_Func_WithDependencies(t *testing.T) {
 	}
 }
 
+func TestWithContext_Satisfy_Func(t *testing.T) {
+	injector := WithContext(nil)
+
+	injector.SetSingleton(func() SomeValue {
+		return SomeValue{message: "Hello EDT!"}
+	})
+
+	value, err := Satisfy[AnotherValue](injector, func(value SomeValue) AnotherValue {
+		return AnotherValue{message: value.message}
+	})
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+}
+
+func TestWithContext_MustSatisfy_Func(t *testing.T) {
+	injector := WithContext(nil)
+
+	injector.SetSingleton(func() SomeValue {
+		return SomeValue{message: "Hello EDT!"}
+	})
+
+	value := MustSatisfy[AnotherValue](injector, func(value SomeValue) AnotherValue {
+		return AnotherValue{message: value.message}
+	})
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+}
+
 func TestWithContext_Factory(t *testing.T) {
 	injector := WithContext(nil)
 
