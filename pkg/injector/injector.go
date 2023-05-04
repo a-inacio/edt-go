@@ -262,19 +262,29 @@ func (i *Injector) getSatisfiedInterfaceProxy(value interface{}, ctx context.Con
 
 	i.types = append(i.types, t)
 
+	var singleton interface{} = nil
+
 	if len(fnArgs) == 0 {
 		return func() interface{} {
-			return i.satisfyDependencies(fn, nil)
+			if singleton == nil {
+				singleton = i.satisfyDependencies(fn, nil)
+			}
+
+			return singleton
 		}
 	} else {
 		return func() interface{} {
-			values, err := i.getValues(fnArgs, ctx)
+			if singleton == nil {
+				values, err := i.getValues(fnArgs, ctx)
 
-			if err != nil {
-				return err
+				if err != nil {
+					return err
+				}
+
+				singleton = i.satisfyDependencies(fn, values)
 			}
 
-			return i.satisfyDependencies(fn, values)
+			return singleton
 		}
 	}
 }

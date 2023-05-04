@@ -68,7 +68,9 @@ func TestWithContext_Singleton(t *testing.T) {
 func TestWithContext_Singleton_Func(t *testing.T) {
 	injector := WithContext(nil)
 
+	counter := 0
 	injector.SetSingleton(func() SomeValue {
+		counter++
 		return SomeValue{message: "Hello EDT!"}
 	})
 
@@ -85,16 +87,26 @@ func TestWithContext_Singleton_Func(t *testing.T) {
 	if value.message != "Hello EDT!" {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
+
+	GetValue[SomeValue](injector)
+
+	if counter != 1 {
+		t.Errorf("Should have been called once, expected %v, got %v", 1, counter)
+	}
 }
 
 func TestWithContext_Singleton_Func_WithDependencies(t *testing.T) {
 	injector := WithContext(nil)
 
+	counter := 0
 	injector.SetSingleton(func() SomeValue {
+		counter++
 		return SomeValue{message: "Hello EDT!"}
 	})
 
+	anotherCounter := 0
 	injector.SetSingleton(func(value SomeValue) AnotherValue {
+		anotherCounter++
 		return AnotherValue{message: value.message}
 	})
 
@@ -110,6 +122,16 @@ func TestWithContext_Singleton_Func_WithDependencies(t *testing.T) {
 
 	if value.message != "Hello EDT!" {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+
+	GetValue[AnotherValue](injector)
+
+	if counter != 1 {
+		t.Errorf("SomeValue singleton should have been called once, expected %v, got %v", 1, counter)
+	}
+
+	if anotherCounter != 1 {
+		t.Errorf("AnotherValue singleton should have been called once, expected %v, got %v", 1, anotherCounter)
 	}
 }
 
