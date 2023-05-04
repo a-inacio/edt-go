@@ -25,9 +25,32 @@ An instance must be given, and it will be the same everytime it is retrieved.
 dependencies := injector.WithContext(nil)
 dependencies.SetSingleton(SomeValue{message: "42"})
 ```
+
+It is possible to define a constructor method (i.e. a function), this function is guaranteed to invoked only once.
+
+```go
+dependencies := injector.WithContext(nil)
+dependencies.SetSingleton(func() SomeValue {
+	return SomeValue{message: "42"}
+})
+```
+
+The constructor method can have parameters as long as they can be satisfied by the injector:
+
+```go
+dependencies := injector.WithContext(nil)
+dependencies.SetSingleton(func() SomeValue{
+    return SomeValue{message: "42"}
+})
+
+dependencies.SetSingleton(func(value SomeValue) AnotherValue {
+    return AnotherValue{message: value.message}
+})
+```
+
 #### Factory
 
-A callback function is to be utilised, you should be creating a new instance on each invocation.
+A callback function is to be utilised, and you should be creating a new instance on each invocation.
 
 ```go
 dependencies := injector.WithContext(nil)
