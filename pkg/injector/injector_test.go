@@ -350,3 +350,67 @@ func TestWithContext_Singleton_WithInterfaceAndConstructorWithInterfacePtr(t *te
 		t.Errorf("Expected %s, got %s", "Hello EDT!", (*value).SomeMethod())
 	}
 }
+
+func TestWithContext_MustSatisfy_Interface(t *testing.T) {
+	injector := WithContext(nil)
+
+	injector.
+		SetSingleton(NewYetAnotherTypeWithInterface("Hello EDT!")).
+		SetSingleton(&SomeValue{message: "Hello EDT!"})
+
+	value := MustSatisfy[AnotherValue](injector, func(value SomeInterface) AnotherValue {
+		return AnotherValue{message: value.SomeMethod()}
+	})
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+
+	anotherValue := MustSatisfy[SomeInterface](injector, func(value *SomeValue) SomeInterface {
+		return NewYetAnotherTypeWithInterface(value.message)
+	})
+
+	if anotherValue == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if (*anotherValue).SomeMethod() != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", (*anotherValue).SomeMethod())
+	}
+}
+
+func TestWithContext_MustSatisfy_InterfacePtr(t *testing.T) {
+	injector := WithContext(nil)
+
+	injector.
+		SetSingleton(NewYetAnotherTypeWithInterfacePtr("Hello EDT!")).
+		SetSingleton(&SomeValue{message: "Hello EDT!"})
+
+	value := MustSatisfy[AnotherValue](injector, func(value SomeInterface) AnotherValue {
+		return AnotherValue{message: value.SomeMethod()}
+	})
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+
+	anotherValue := MustSatisfy[SomeInterface](injector, func(value *SomeValue) SomeInterface {
+		return NewYetAnotherTypeWithInterfacePtr(value.message)
+	})
+
+	if anotherValue == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if (*anotherValue).SomeMethod() != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", (*anotherValue).SomeMethod())
+	}
+}

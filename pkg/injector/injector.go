@@ -297,8 +297,9 @@ func getFuncReturnValue(factory interface{}) (reflect.Value, reflect.Type) {
 
 func castValue[T any](value interface{}, t reflect.Type) (*T, error) {
 	tv := reflect.TypeOf(value)
+	tt := reflect.TypeOf((*T)(nil)).Elem()
 
-	if t.Kind() != reflect.Interface && tv.Kind() == reflect.Ptr {
+	if tt.Kind() != reflect.Interface && t.Kind() != reflect.Interface && tv.Kind() == reflect.Ptr {
 		// Cast the value to the desired pointer type.
 		typedVal, ok := value.(*T)
 		if !ok {
