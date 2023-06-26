@@ -52,6 +52,14 @@ func GetValueWithContext[T any](i *Injector, ctx context.Context) (*T, error) {
 	return castValue[T](value, t)
 }
 
+func MustGetValue[T any](i *Injector) T {
+	value, err := GetValue[T](i)
+	if err != nil {
+		panic(fmt.Sprintf("missing dependency - %s", err.Error()))
+	}
+	return *value
+}
+
 func GetValue[T any](i *Injector) (*T, error) {
 	return GetValueWithContext[T](i, nil)
 }
