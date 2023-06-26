@@ -84,18 +84,18 @@ func SatisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Co
 	}
 }
 
-func MustSatisfy[T any](i *Injector, f interface{}) *T {
+func MustSatisfy[T any](i *Injector, f interface{}) T {
 	return MustSatisfyWithAnotherContext[T](i, f, nil)
 }
 
-func MustSatisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Context) *T {
+func MustSatisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Context) T {
 	res, err := SatisfyWithAnotherContext[T](i, f, ctx)
 
 	if err != nil {
 		panic(fmt.Sprintf("unable to satisfy interface - %s", err.Error()))
 	}
 
-	return res
+	return *res
 }
 
 func GetValueFromContext[T any](ctx context.Context) (*T, error) {

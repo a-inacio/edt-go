@@ -170,10 +170,6 @@ func TestWithContext_MustSatisfy_Func(t *testing.T) {
 		return AnotherValue{message: value.message}
 	})
 
-	if value == nil {
-		t.Errorf("Should have gotten a value")
-	}
-
 	if value.message != "Hello EDT!" {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
@@ -362,10 +358,6 @@ func TestWithContext_MustSatisfy_Interface(t *testing.T) {
 		return AnotherValue{message: value.SomeMethod()}
 	})
 
-	if value == nil {
-		t.Errorf("Should have gotten a value")
-	}
-
 	if value.message != "Hello EDT!" {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
@@ -378,8 +370,8 @@ func TestWithContext_MustSatisfy_Interface(t *testing.T) {
 		t.Errorf("Should have gotten a value")
 	}
 
-	if (*anotherValue).SomeMethod() != "Hello EDT!" {
-		t.Errorf("Expected %s, got %s", "Hello EDT!", (*anotherValue).SomeMethod())
+	if anotherValue.SomeMethod() != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", anotherValue.SomeMethod())
 	}
 }
 
@@ -394,10 +386,6 @@ func TestWithContext_MustSatisfy_InterfacePtr(t *testing.T) {
 		return AnotherValue{message: value.SomeMethod()}
 	})
 
-	if value == nil {
-		t.Errorf("Should have gotten a value")
-	}
-
 	if value.message != "Hello EDT!" {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
@@ -406,12 +394,8 @@ func TestWithContext_MustSatisfy_InterfacePtr(t *testing.T) {
 		return NewYetAnotherTypeWithInterfacePtr(value.message)
 	})
 
-	if anotherValue == nil {
-		t.Errorf("Should have gotten a value")
-	}
-
-	if (*anotherValue).SomeMethod() != "Hello EDT!" {
-		t.Errorf("Expected %s, got %s", "Hello EDT!", (*anotherValue).SomeMethod())
+	if anotherValue.SomeMethod() != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", anotherValue.SomeMethod())
 	}
 }
 
