@@ -237,7 +237,7 @@ func TestChainMethods(t *testing.T) {
 		}).
 		Context()
 
-	value, err := GetValueFromContext[SomeValue](ctx)
+	value, err := GetFromContext[SomeValue](ctx)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -247,7 +247,7 @@ func TestChainMethods(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
 
-	anotherValue, err := GetValueFromContext[AnotherValue](ctx)
+	anotherValue, err := GetFromContext[AnotherValue](ctx)
 
 	if err != nil {
 		t.Errorf("Should not have failed")

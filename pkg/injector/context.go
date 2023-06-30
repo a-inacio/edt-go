@@ -2,6 +2,7 @@ package injector
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 )
 
@@ -24,7 +25,7 @@ func FromContext(ctx context.Context) *Injector {
 		return WithContext(nil)
 	}
 
-	i, ok := ctx.Value(reflect.TypeOf(Injector{}).PkgPath()).(*Injector)
+	i, ok := fromContext(ctx)
 
 	if !ok || i == nil {
 		return WithContext(nil)
@@ -33,6 +34,38 @@ func FromContext(ctx context.Context) *Injector {
 	return i
 }
 
-func GetValueFromContext[T any](ctx context.Context) (*T, error) {
+func GetFromContext[T any](ctx context.Context) (*T, error) {
 	return Get[T](FromContext(ctx))
+}
+
+func MustGetFromContext[T any](ctx context.Context) T {
+	if ctx == nil {
+		panic("context cannot be nil")
+	}
+
+	i, ok := fromContext(ctx)
+
+	if !ok || i == nil {
+		panic("no injector in context")
+	}
+
+	value, err := Get[T](i)
+	if err != nil {
+		panic(fmt.Sprintf("missing dependency - %s", err.Error()))
+	}
+	return *value
+}
+
+func MustSatisfyFromContext[T any](ctx context.Context, f interface{}) T {
+	if ctx == nil {
+		panic("context cannot be nil")
+	}
+
+	i, ok := fromContext(ctx)
+
+	if !ok || i == nil {
+		panic("no injector in context")
+	}
+
+	return MustSatisfy[T](i, f)
 }

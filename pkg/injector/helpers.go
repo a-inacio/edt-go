@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+func fromContext(ctx context.Context) (*Injector, bool) {
+	i, ok := ctx.Value(reflect.TypeOf(Injector{}).PkgPath()).(*Injector)
+	return i, ok
+}
+
 func satisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Context) (*T, error) {
 	t := reflect.TypeOf(f)
 
