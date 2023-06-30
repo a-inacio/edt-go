@@ -50,7 +50,7 @@ func TestWithContext_Singleton(t *testing.T) {
 	injector := WithContext(nil)
 	injector.SetSingleton(SomeValue{message: "Hello EDT!"})
 
-	value, err := GetValue[SomeValue](injector)
+	value, err := Get[SomeValue](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -74,7 +74,7 @@ func TestWithContext_Singleton_Func(t *testing.T) {
 		return SomeValue{message: "Hello EDT!"}
 	})
 
-	value, err := GetValue[SomeValue](injector)
+	value, err := Get[SomeValue](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -88,7 +88,7 @@ func TestWithContext_Singleton_Func(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
 
-	GetValue[SomeValue](injector)
+	Get[SomeValue](injector)
 
 	if counter != 1 {
 		t.Errorf("Should have been called once, expected %v, got %v", 1, counter)
@@ -110,7 +110,7 @@ func TestWithContext_Singleton_Func_WithDependencies(t *testing.T) {
 		return AnotherValue{message: value.message}
 	})
 
-	value, err := GetValue[AnotherValue](injector)
+	value, err := Get[AnotherValue](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -124,7 +124,7 @@ func TestWithContext_Singleton_Func_WithDependencies(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
 
-	GetValue[AnotherValue](injector)
+	Get[AnotherValue](injector)
 
 	if counter != 1 {
 		t.Errorf("SomeValue singleton should have been called once, expected %v, got %v", 1, counter)
@@ -184,7 +184,7 @@ func TestWithContext_Factory(t *testing.T) {
 		return SomeValue{counter: counter}
 	})
 
-	value, err := GetValue[SomeValue](injector)
+	value, err := Get[SomeValue](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -198,7 +198,7 @@ func TestWithContext_Factory(t *testing.T) {
 		t.Errorf("Expected %v, got %v", 1, value.counter)
 	}
 
-	value, _ = GetValue[SomeValue](injector)
+	value, _ = Get[SomeValue](injector)
 
 	if value.counter != 2 {
 		t.Errorf("Expected %v, got %v", 2, value.counter)
@@ -211,7 +211,7 @@ func TestFromContext(t *testing.T) {
 
 	value, err := expirable.NewBuilder().
 		FromOperation(func(ctx context.Context) (action.Result, error) {
-			value, err := GetValue[SomeValue](FromContext(ctx))
+			value, err := Get[SomeValue](FromContext(ctx))
 			return value.message, err
 		}).
 		WithTimeout(2 * time.Second).
@@ -262,7 +262,7 @@ func TestWithContext_Singleton_WithInterface(t *testing.T) {
 	injector := WithContext(nil)
 	injector.SetSingleton(SomeTypeWithInterface{message: "Hello EDT!"})
 
-	value, err := GetValue[SomeInterface](injector)
+	value, err := Get[SomeInterface](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -281,7 +281,7 @@ func TestWithContext_Singleton_Ptr(t *testing.T) {
 	injector := WithContext(nil)
 	injector.SetSingleton(&SomeValue{message: "Hello EDT!"})
 
-	value, err := GetValue[SomeValue](injector)
+	value, err := Get[SomeValue](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -302,7 +302,7 @@ func TestWithContext_Singleton_WithNoSingleInterface(t *testing.T) {
 		SetSingleton(SomeTypeWithInterface{message: "Hello EDT!"}).
 		SetSingleton(YetAnotherTypeWithInterface{message: "Hello EDT!"})
 
-	_, err := GetValue[SomeInterface](injector)
+	_, err := Get[SomeInterface](injector)
 
 	if err == nil {
 		t.Errorf("Should have failed")
@@ -313,7 +313,7 @@ func TestWithContext_Singleton_WithInterfaceAndConstructorWithInterface(t *testi
 	injector := WithContext(nil)
 	injector.SetSingleton(NewYetAnotherTypeWithInterface("Hello EDT!"))
 
-	value, err := GetValue[SomeInterface](injector)
+	value, err := Get[SomeInterface](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -332,7 +332,7 @@ func TestWithContext_Singleton_WithInterfaceAndConstructorWithInterfacePtr(t *te
 	injector := WithContext(nil)
 	injector.SetSingleton(NewYetAnotherTypeWithInterfacePtr("Hello EDT!"))
 
-	value, err := GetValue[SomeInterface](injector)
+	value, err := Get[SomeInterface](injector)
 
 	if err != nil {
 		t.Errorf("Should not have failed")
@@ -406,7 +406,7 @@ func TestMustGetValue(t *testing.T) {
 		SetSingleton(NewYetAnotherTypeWithInterfacePtr("Hello EDT!")).
 		SetSingleton(&SomeValue{message: "Hello EDT!"})
 
-	value := MustGetValue[SomeValue](injector)
+	value := MustGet[SomeValue](injector)
 
 	if value.message != "Hello EDT!" {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
