@@ -6,12 +6,15 @@ import (
 	"reflect"
 )
 
+// Injector is a dependency injection container.
 type Injector struct {
 	data  map[string]func() interface{}
 	types []reflect.Type
 	ctx   context.Context
 }
 
+// MustGet will attempt to get the value of a type T from the injector, and panic if it is not found.
+// Use this method if you want to enforce that a dependency is present and want to panic if it is not.
 func MustGet[T any](i *Injector) T {
 	value, err := Get[T](i)
 	if err != nil {
@@ -30,6 +33,7 @@ func MustSatisfy[T any](i *Injector, f interface{}) T {
 	return *res
 }
 
+// Get will attempt to get the value of a type T from the injector. If the value is not found, it will return an error.
 func Get[T any](i *Injector) (*T, error) {
 	return getValueWithContext[T](i, nil)
 }
@@ -38,6 +42,7 @@ func Satisfy[T any](i *Injector, f interface{}) (*T, error) {
 	return satisfyWithAnotherContext[T](i, f, nil)
 }
 
+// SetSingleton sets a singleton value that will be returned every time the type is requested.
 func (i *Injector) SetSingleton(value interface{}) *Injector {
 	t := reflect.TypeOf(value)
 
@@ -50,6 +55,7 @@ func (i *Injector) SetSingleton(value interface{}) *Injector {
 	return i
 }
 
+// SetFactory sets a factory function that will be used to create a new instance of the type.
 func (i *Injector) SetFactory(factory interface{}) *Injector {
 	if isTypeFunc(reflect.TypeOf(factory)) {
 		fn, returnType := getFuncReturnValue(factory)
@@ -66,6 +72,7 @@ func (i *Injector) SetFactory(factory interface{}) *Injector {
 	return i
 }
 
+// Context returns the context associated with the injector.
 func (i *Injector) Context() context.Context {
 	return i.ctx
 }

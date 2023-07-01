@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// WithContext creates a new injector with the given context.
 func WithContext(ctx context.Context) *Injector {
 	i := &Injector{
 		data: make(map[string]func() interface{}),
@@ -15,6 +16,7 @@ func WithContext(ctx context.Context) *Injector {
 	return i
 }
 
+// FromContext gets the injector from the given context, or creates a new one if it does not exist.
 func FromContext(ctx context.Context) *Injector {
 	if ctx == nil {
 		return WithContext(nil)
@@ -29,10 +31,16 @@ func FromContext(ctx context.Context) *Injector {
 	return i
 }
 
+// GetFromContext gets the value from the given context. If the value does not exist, it will return an error.
+// Use this method as quick way to get a single value from the context and to avoid having to retrieve the injector.
+// If you need to get multiple values from the context, it is recommended to retrieve the injector and use the Get method.
 func GetFromContext[T any](ctx context.Context) (*T, error) {
 	return Get[T](FromContext(ctx))
 }
 
+// MustGetFromContext gets the value from the given context. If the value does not exist, it will panic.
+// Use this method as quick way to get a single value from the context and to avoid having to retrieve the injector.
+// If you need to get multiple values from the context, it is recommended to retrieve the injector and use the MustGet method.
 func MustGetFromContext[T any](ctx context.Context) T {
 	if ctx == nil {
 		panic("context cannot be nil")
