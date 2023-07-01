@@ -14,7 +14,7 @@ type Injector struct {
 }
 
 // MustGet will attempt to get the value of a type T from the injector, and panic if it is not found.
-// Use this method if you want to enforce that a dependency is present and want to panic if it is not.
+// Use this method if you want to enforce that a dependency is present avoiding the error checking at the cost of halting execution.
 func MustGet[T any](i *Injector) T {
 	value, err := Get[T](i)
 	if err != nil {
