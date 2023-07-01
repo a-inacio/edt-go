@@ -3,19 +3,14 @@ package injector
 import (
 	"context"
 	"fmt"
-	"reflect"
 )
 
 func WithContext(ctx context.Context) *Injector {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	i := &Injector{
 		data: make(map[string]func() interface{}),
 	}
 
-	i.ctx = context.WithValue(ctx, reflect.TypeOf(Injector{}).PkgPath(), i)
+	i.ctx = toContext(ctx, i)
 
 	return i
 }

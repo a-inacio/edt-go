@@ -12,6 +12,14 @@ func fromContext(ctx context.Context) (*Injector, bool) {
 	return i, ok
 }
 
+func toContext(parent context.Context, i *Injector) context.Context {
+	if parent == nil {
+		parent = context.Background()
+	}
+
+	return context.WithValue(parent, reflect.TypeOf(Injector{}).PkgPath(), i)
+}
+
 func satisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Context) (*T, error) {
 	t := reflect.TypeOf(f)
 
