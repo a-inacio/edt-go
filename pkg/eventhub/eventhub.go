@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// NewEventHub creates a new EventHub instance
 func NewEventHub(config *Config) *EventHub {
 	logger := rosetta.NewLogger(logger.NullLoggerType)
 
@@ -19,6 +20,7 @@ func NewEventHub(config *Config) *EventHub {
 	return &EventHub{subscriptions: make(map[string]handlers), l: logger}
 }
 
+// Subscribe subscribes to an event
 func (h *EventHub) Subscribe(e event.Event, handler Handler) {
 	eventName := event.GetName(e)
 
@@ -35,6 +37,7 @@ func (h *EventHub) Subscribe(e event.Event, handler Handler) {
 	h.mu.Unlock()
 }
 
+// Unsubscribe unsubscribes from an event
 func (h *EventHub) Unsubscribe(e event.Event, handler Handler) {
 	eventName := event.GetName(e)
 
@@ -58,6 +61,7 @@ func (h *EventHub) Unsubscribe(e event.Event, handler Handler) {
 	h.mu.Unlock()
 }
 
+// Publish publishes an event
 func (h *EventHub) Publish(e event.Event, ctx context.Context) *sync.WaitGroup {
 	log := h.l
 	eventName := event.GetName(e)
