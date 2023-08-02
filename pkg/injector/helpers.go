@@ -115,12 +115,10 @@ func (i *Injector) getValue(t reflect.Type, ctx context.Context) (interface{}, e
 
 func getName(t reflect.Type) string {
 	if t.Kind() == reflect.Ptr {
-		// We don't want the `*` in case this is a pointer  otherwise if passing
-		// by a pointer or value the events will be different.
-		return strings.TrimPrefix(t.Elem().String(), "*")
+		return t.Elem().PkgPath() + "/" + t.Elem().Name()
 	}
 
-	return t.String()
+	return t.PkgPath() + "/" + t.Name()
 }
 
 func isTypeContext(t reflect.Type) bool {
