@@ -3,7 +3,7 @@
 ## Importing
 
 ``` bash
-got get -u github.com/a-inacio/edt-go
+go get -u github.com/a-inacio/edt-go
 ```
 
 ## Exploring the Constructs
