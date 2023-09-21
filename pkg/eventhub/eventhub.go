@@ -6,6 +6,7 @@ import (
 	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/rosetta-logger-go/pkg/logger"
 	"github.com/a-inacio/rosetta-logger-go/pkg/rosetta"
+	"reflect"
 	"sync"
 )
 
@@ -103,7 +104,15 @@ func (h *EventHub) Publish(e event.Event, ctx context.Context) *sync.WaitGroup {
 // Subscribe subscribes to an event
 func (h *EventHub) Subscribe(e event.Event, action action.Action) Handler {
 	handler := ToHandler(func(ctx context.Context, e event.Event) error {
-		_, err := action(ctx)
+		if ctx == nil {
+			ctx = context.Background()
+		}
+
+		// Create a sub context with the event value
+		evCtx := context.
+			WithValue(ctx, reflect.TypeOf(e).PkgPath(), e)
+
+		_, err := action(evCtx)
 		return err
 	})
 

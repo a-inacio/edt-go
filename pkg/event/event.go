@@ -1,6 +1,8 @@
 package event
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -67,4 +69,14 @@ func GetValue[T any](event Event) (*T, error) {
 	}
 
 	return &typedVal, nil
+}
+
+func Get[T any](ctx context.Context) (*T, error) {
+	t := reflect.TypeOf((*T)(nil)).Elem()
+	i, ok := ctx.Value(t.PkgPath()).(T)
+
+	if !ok {
+		return nil, errors.New("could not get value from context")
+	}
+	return &i, nil
 }

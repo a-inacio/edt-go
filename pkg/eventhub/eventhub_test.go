@@ -11,6 +11,7 @@ import (
 
 type SomeEvent struct {
 	ShouldFail bool
+	SomeValue  string
 }
 
 type SomeOtherEvent struct {
@@ -140,5 +141,31 @@ func TestHub_PublishAndSubscribeWithAction(t *testing.T) {
 
 	if !gotCalled {
 		t.Errorf("The handler should have been called")
+	}
+}
+
+func TestHub_PublishAndSubscribeWithActionWithContext(t *testing.T) {
+	hub := NewEventHub(nil)
+
+	gotCalled := false
+	result := ""
+
+	hub.Subscribe(SomeEvent{}, func(ctx context.Context) (action.Result, error) {
+		gotCalled = true
+		ev, _ := event.Get[SomeEvent](ctx)
+		result = ev.SomeValue
+		return action.Nothing()
+	})
+
+	wg := hub.Publish(SomeEvent{SomeValue: "42"}, nil)
+
+	wg.Wait()
+
+	if !gotCalled {
+		t.Errorf("The handler should have been called")
+	}
+
+	if result != "42" {
+		t.Errorf("Should have received 42")
 	}
 }
