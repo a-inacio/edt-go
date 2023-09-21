@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/event"
 	"testing"
 )
@@ -51,7 +52,7 @@ func TestHub_PublishAndSubscribe(t *testing.T) {
 
 	someEventHandler := &SomeEventHandler{}
 
-	hub.Subscribe(SomeEvent{}, someEventHandler)
+	hub.RegisterHandler(SomeEvent{}, someEventHandler)
 
 	wg := hub.Publish(SomeEvent{}, nil)
 
@@ -75,7 +76,7 @@ func TestHub_FailingSubscriber(t *testing.T) {
 
 	someEventHandler := &SomeEventHandler{}
 
-	hub.Subscribe(SomeEvent{}, someEventHandler)
+	hub.RegisterHandler(SomeEvent{}, someEventHandler)
 
 	wg := hub.Publish(SomeEvent{ShouldFail: true}, nil)
 
@@ -91,7 +92,7 @@ func TestHub_PublishAndSubscribeWithGenericEvents(t *testing.T) {
 
 	someEventHandler := &SomeGenericEventHandler{}
 
-	hub.Subscribe(event.WithName("SomeEvent"), someEventHandler)
+	hub.RegisterHandler(event.WithName("SomeEvent"), someEventHandler)
 
 	wg := hub.Publish(*event.WithNameAndKeyValues("SomeEvent", "Message", 42), nil)
 
@@ -110,7 +111,7 @@ func TestHub_PublishAndSubscribeWithGenericCallbacks(t *testing.T) {
 	hub := NewEventHub(nil)
 
 	gotCalled := 0
-	hub.Subscribe(event.WithName("SomeEvent"), ToHandler(func(ctx context.Context, e event.Event) error {
+	hub.RegisterHandler(event.WithName("SomeEvent"), ToHandler(func(ctx context.Context, e event.Event) error {
 		gotCalled++
 		return nil
 	}))
@@ -121,5 +122,23 @@ func TestHub_PublishAndSubscribeWithGenericCallbacks(t *testing.T) {
 
 	if gotCalled != 1 {
 		t.Errorf("The handler should have been called once")
+	}
+}
+
+func TestHub_PublishAndSubscribeWithAction(t *testing.T) {
+	hub := NewEventHub(nil)
+
+	gotCalled := false
+	hub.Subscribe(SomeEvent{}, func(ctx context.Context) (action.Result, error) {
+		gotCalled = true
+		return action.Nothing()
+	})
+
+	wg := hub.Publish(SomeEvent{}, nil)
+
+	wg.Wait()
+
+	if !gotCalled {
+		t.Errorf("The handler should have been called")
 	}
 }

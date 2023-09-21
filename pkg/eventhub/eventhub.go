@@ -2,6 +2,7 @@ package eventhub
 
 import (
 	"context"
+	"github.com/a-inacio/edt-go/pkg/action"
 	"github.com/a-inacio/edt-go/pkg/event"
 	"github.com/a-inacio/rosetta-logger-go/pkg/logger"
 	"github.com/a-inacio/rosetta-logger-go/pkg/rosetta"
@@ -20,8 +21,8 @@ func NewEventHub(config *Config) *EventHub {
 	return &EventHub{subscriptions: make(map[string]handlers), l: logger}
 }
 
-// Subscribe subscribes to an event
-func (h *EventHub) Subscribe(e event.Event, handler Handler) {
+// RegisterHandler registers a handler for an event
+func (h *EventHub) RegisterHandler(e event.Event, handler Handler) {
 	eventName := event.GetName(e)
 
 	h.mu.Lock()
@@ -37,8 +38,8 @@ func (h *EventHub) Subscribe(e event.Event, handler Handler) {
 	h.mu.Unlock()
 }
 
-// Unsubscribe unsubscribes from an event
-func (h *EventHub) Unsubscribe(e event.Event, handler Handler) {
+// UnregisterHandler unregister a handler for an event
+func (h *EventHub) UnregisterHandler(e event.Event, handler Handler) {
 	eventName := event.GetName(e)
 
 	h.mu.Lock()
@@ -97,4 +98,16 @@ func (h *EventHub) Publish(e event.Event, ctx context.Context) *sync.WaitGroup {
 	}
 
 	return &wg
+}
+
+// Subscribe subscribes to an event
+func (h *EventHub) Subscribe(e event.Event, action action.Action) Handler {
+	handler := ToHandler(func(ctx context.Context, e event.Event) error {
+		_, err := action(ctx)
+		return err
+	})
+
+	h.RegisterHandler(e, handler)
+
+	return handler
 }

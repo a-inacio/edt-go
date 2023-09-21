@@ -70,12 +70,12 @@ func (ex *Expectable) subscribe() *expectableEventHandler {
 		}, 1),
 	}
 
-	ex.h.Subscribe(ex.e, h)
+	ex.h.RegisterHandler(ex.e, h)
 
 	return h
 }
 
 func (ex *Expectable) unsubscribe(h *expectableEventHandler) {
-	ex.h.Unsubscribe(ex.e, h)
+	ex.h.UnregisterHandler(ex.e, h)
 	close(h.ch)
 }

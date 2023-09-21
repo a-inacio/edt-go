@@ -178,5 +178,5 @@ func (builder *StateMachineBuilder) trySubscribeFromHub(e event.Event, sm *State
 		return
 	}
 
-	builder.hub.Subscribe(e, &stateMachineHubHandler{sm: sm})
+	builder.hub.RegisterHandler(e, &stateMachineHubHandler{sm: sm})
 }
