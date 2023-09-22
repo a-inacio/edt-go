@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type Delayable struct {
+	delay     time.Duration
+	operation action.Action
+}
+
 func (d *Delayable) Go(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()

@@ -3,7 +3,13 @@ package executor
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
+	"sync"
 )
+
+type Executor struct {
+	mu      sync.Mutex
+	actions []action.Action
+}
 
 func NewExecutor() *Executor {
 	return &Executor{}

@@ -7,6 +7,47 @@ import (
 	"github.com/a-inacio/edt-go/pkg/event"
 )
 
+type State struct {
+	Name     string
+	OnBefore func(ctx context.Context, trigger Trigger)
+	OnEnter  func(ctx context.Context, trigger Trigger)
+	OnAfter  func(ctx context.Context, trigger Trigger)
+}
+
+type Trigger struct {
+	Event     *event.Event
+	FromState *State
+	ToState   *State
+}
+
+// Transition is a type that represents a transition from one state to another in response to a specific event.
+type Transition struct {
+	EventName string
+	To        *Node
+}
+
+type NodeType int
+
+const (
+	InitialNode NodeType = iota
+	TerminalNode
+	ChildNode
+)
+
+type Node struct {
+	Type        NodeType
+	State       *State
+	Transitions map[string]Transition
+}
+
+// StateMachine is a type that represents a generic state machine.
+type StateMachine struct {
+	nodes   map[string]Node
+	context context.Context
+	current string
+	initial string
+}
+
 func NewStateMachine(initialState *State, ctx context.Context) (*StateMachine, error) {
 	if initialState.Name == "" {
 		return nil, errors.New("state name cannot be empty")

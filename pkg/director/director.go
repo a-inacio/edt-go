@@ -3,8 +3,16 @@ package director
 import (
 	"context"
 	"github.com/a-inacio/edt-go/pkg/action"
+	"github.com/a-inacio/edt-go/pkg/director/breaker"
 	"github.com/a-inacio/edt-go/pkg/director/breaker/contextbreaker"
+	"sync"
 )
+
+type Director struct {
+	actions []action.Action
+	wg      sync.WaitGroup
+	breaker breaker.Breaker
+}
 
 func (d *Director) Go(ctx context.Context) (action.Result, error) {
 	if ctx == nil {

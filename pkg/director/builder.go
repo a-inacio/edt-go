@@ -7,6 +7,11 @@ import (
 	"sync"
 )
 
+type Builder struct {
+	actions []action.Action
+	breaker breaker.Breaker
+}
+
 func NewBuilder() *Builder {
 	return &Builder{}
 }

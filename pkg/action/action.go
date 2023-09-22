@@ -6,6 +6,9 @@ import (
 	"reflect"
 )
 
+type Result interface{}
+type Action func(ctx context.Context) (Result, error)
+
 func FromError(err error) (Result, error) {
 	return nil, err
 }

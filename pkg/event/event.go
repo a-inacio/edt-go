@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+// Event can be anything
+type Event interface{}
+
+// NamedEvent is anything that explicitly states it has a name for an event
+type NamedEvent interface {
+	EventName() string
+}
+
 // GetName returns the name of the event, for the special case of NameEvents
 // the returned value is the result of the `EventName` function otherwise
 // it falls back to the Type name (since anything can be an event).

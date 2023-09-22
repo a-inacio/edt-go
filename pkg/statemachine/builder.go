@@ -9,6 +9,28 @@ import (
 	"strings"
 )
 
+type transitionBuilder struct {
+	from  string
+	to    string
+	event event.Event
+}
+
+type eventBuilder struct {
+	state string
+	event event.Event
+	name  string
+}
+
+type StateMachineBuilder struct {
+	initialState *State
+	states       []*State
+	transitions  []transitionBuilder
+	graph        string
+	events       []eventBuilder
+	context      context.Context
+	hub          *eventhub.EventHub
+}
+
 func NewBuilder() *StateMachineBuilder {
 	return &StateMachineBuilder{}
 }

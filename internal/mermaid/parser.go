@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+type Node struct {
+	From             string
+	To               string
+	SourceIsInitial  bool
+	TargetIsTerminal bool
+}
+
 func Parse(graph string) ([]Node, error) {
 	lines := strings.Split(graph, "\n")
 	var nodes []Node

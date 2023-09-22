@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type Expirable struct {
+	timeout time.Duration
+	action  action.Action
+	hooks   Hooks
+}
+
 func (e *Expirable) Go(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()

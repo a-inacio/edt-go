@@ -5,7 +5,15 @@ import (
 	"fmt"
 	"github.com/a-inacio/edt-go/pkg/action"
 	"reflect"
+	"sync"
 )
+
+type Awaitable struct {
+	ctx context.Context
+	wg  sync.WaitGroup
+	r   action.Result
+	e   error
+}
 
 func AwaitFor(ctx context.Context, a action.Action) *Awaitable {
 	if ctx == nil {

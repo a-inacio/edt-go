@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type Loopable struct {
+	actions []action.Action
+	delay   time.Duration
+}
+
 func (l *Loopable) Go(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()

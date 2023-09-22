@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type Builder struct {
+	actions []action.Action
+	delay   time.Duration
+}
+
 func NewBuilder() *Builder {
 	return &Builder{}
 }

@@ -10,6 +10,16 @@ import (
 	"sync"
 )
 
+type EventHub struct {
+	mu            sync.Mutex
+	l             logger.Logger
+	subscriptions map[string]handlers
+}
+
+type Config struct {
+	Logger logger.Logger
+}
+
 // NewEventHub creates a new EventHub instance
 func NewEventHub(config *Config) *EventHub {
 	logger := rosetta.NewLogger(logger.NullLoggerType)

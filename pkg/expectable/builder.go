@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+type Builder struct {
+	e        event.Event
+	h        *eventhub.EventHub
+	timeout  time.Duration
+	criteria func(e event.Event) bool
+}
+
 func NewBuilder() *Builder {
 	return &Builder{}
 }
