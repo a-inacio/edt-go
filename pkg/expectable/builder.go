@@ -56,12 +56,12 @@ func (builder *Builder) Build() (*Expectable, error) {
 	return instance, nil
 }
 
-func (builder *Builder) Go(ctx context.Context) (action.Result, error) {
+func (builder *Builder) Do(ctx context.Context) (action.Result, error) {
 	instance, err := builder.Build()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return instance.Go(ctx)
+	return instance.Do(ctx)
 }

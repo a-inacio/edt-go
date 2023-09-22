@@ -27,9 +27,9 @@ func TestDirector_Go(t *testing.T) {
 					return action.Nothing()
 				}).
 				Build().
-				Go).
+				Do).
 		Build().
-		Go(ctx)
+		Do(ctx)
 
 	if counterA != 1 {
 		t.Errorf("Expected 1, got %v", counterA)

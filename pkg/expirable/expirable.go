@@ -12,7 +12,7 @@ type Expirable struct {
 	hooks   Hooks
 }
 
-func (e *Expirable) Go(ctx context.Context) (action.Result, error) {
+func (e *Expirable) Do(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}

@@ -28,7 +28,7 @@ func TestExpectable_ContinueAfterEvent(t *testing.T) {
 		return action.Nothing()
 	})
 
-	res, err := expect.Go(ctx)
+	res, err := expect.Do(ctx)
 
 	if err != nil {
 		t.Errorf("Should not have failled")
@@ -53,7 +53,7 @@ func TestExpectable_ShouldBeCanceled(t *testing.T) {
 		return action.Nothing()
 	})
 
-	_, err := NewExpectable(hub, SomeEvent{}).Go(ctx)
+	_, err := NewExpectable(hub, SomeEvent{}).Do(ctx)
 
 	if err == nil {
 		t.Errorf("Should have been canceled and an error returned")
@@ -67,7 +67,7 @@ func TestExpectableBuilder_ShouldBeCanceled(t *testing.T) {
 		On(hub).
 		Expect(SomeEvent{}).
 		WithTimeout(1 * time.Second).
-		Go(context.Background())
+		Do(context.Background())
 
 	if err == nil {
 		t.Errorf("Should have been canceled and an error returned")
@@ -91,7 +91,7 @@ func TestExpectableBuilder_ShouldContinueAfterEvent(t *testing.T) {
 		return action.Nothing()
 	})
 
-	res, err := expect.Go(ctx)
+	res, err := expect.Do(ctx)
 
 	if err != nil {
 		t.Errorf("Should not have failled")
@@ -130,7 +130,7 @@ func TestExpectableBuilder_ShouldNotContinueAfterEvent(t *testing.T) {
 		return action.Nothing()
 	})
 
-	_, err = expect.Go(ctx)
+	_, err = expect.Do(ctx)
 
 	if err == nil {
 		t.Errorf("Should have been canceled and an error returned")

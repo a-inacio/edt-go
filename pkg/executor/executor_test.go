@@ -18,10 +18,10 @@ func TestExecutor_ExecuteOne(t *testing.T) {
 			return true, nil
 		})
 
-	v1, _ := ex.ExecuteOne(nil)
-	v2, _ := ex.ExecuteOne(nil)
-	v3, _ := ex.ExecuteOne(nil)
-	v4, _ := ex.ExecuteOne(nil)
+	v1, _ := ex.Do(nil)
+	v2, _ := ex.Do(nil)
+	v3, _ := ex.Do(nil)
+	v4, _ := ex.Do(nil)
 
 	s1, _ := action.GetValue[string](v1)
 	i2, _ := action.GetValue[int](v2)

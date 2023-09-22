@@ -60,6 +60,6 @@ func (builder *Builder) Build() *Expirable {
 	}
 }
 
-func (builder *Builder) Go(ctx context.Context) (action.Result, error) {
-	return builder.Build().Go(ctx)
+func (builder *Builder) Do(ctx context.Context) (action.Result, error) {
+	return builder.Build().Do(ctx)
 }

@@ -215,7 +215,7 @@ func TestFromContext(t *testing.T) {
 			return value.message, err
 		}).
 		WithTimeout(2 * time.Second).
-		Go(injector.Context())
+		Do(injector.Context())
 
 	if err != nil {
 		t.Errorf("Should not have failed")

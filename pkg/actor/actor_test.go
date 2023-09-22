@@ -20,7 +20,7 @@ func TestActor_Go(t *testing.T) {
 			},
 			action.DoNothing,
 			action.DoNothing).
-		Go(ctx)
+		Do(ctx)
 
 	if count < 4 || count > 5 {
 		t.Errorf("Action executed an unpected number of times, %v", count)

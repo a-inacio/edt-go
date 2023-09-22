@@ -14,7 +14,7 @@ func TestAwaitFor(t *testing.T) {
 			return 42, nil
 		}).
 		WithTimeout(2*time.Second).
-		Go)
+		Do)
 
 	res, err := GetValue[int](awaitable)
 

@@ -11,7 +11,7 @@ type Loopable struct {
 	delay   time.Duration
 }
 
-func (l *Loopable) Go(ctx context.Context) (action.Result, error) {
+func (l *Loopable) Do(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -40,5 +40,5 @@ func RunForever(ctx context.Context, delay time.Duration, actions ...action.Acti
 		WithDelay(delay).
 		LoopOn(actions...).
 		Build().
-		Go(ctx)
+		Do(ctx)
 }

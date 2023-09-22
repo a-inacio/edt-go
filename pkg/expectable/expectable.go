@@ -26,7 +26,7 @@ func NewExpectable(h *eventhub.EventHub, e event.Event) *Expectable {
 	return &Expectable{h: h, e: e}
 }
 
-func (ex *Expectable) Go(ctx context.Context) (action.Result, error) {
+func (ex *Expectable) Do(ctx context.Context) (action.Result, error) {
 	var currentCtx context.Context = nil
 	var cancel context.CancelFunc = nil
 

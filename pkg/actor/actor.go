@@ -12,6 +12,6 @@ type Actor struct {
 	loopDelay time.Duration
 }
 
-func (a *Actor) Go(ctx context.Context) (action.Result, error) {
+func (a *Actor) Do(ctx context.Context) (action.Result, error) {
 	return loopable.RunForever(ctx, a.loopDelay, a.actions...)
 }

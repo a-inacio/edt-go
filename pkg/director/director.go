@@ -14,7 +14,7 @@ type Director struct {
 	breaker breaker.Breaker
 }
 
-func (d *Director) Go(ctx context.Context) (action.Result, error) {
+func (d *Director) Do(ctx context.Context) (action.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}

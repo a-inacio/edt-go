@@ -26,7 +26,7 @@ func TestLoopable_Go(t *testing.T) {
 				return action.Nothing()
 			}).
 		Build().
-		Go(ctx)
+		Do(ctx)
 
 	if counterA < 3 {
 		t.Errorf("Expected >= 3, got %v", counterA)

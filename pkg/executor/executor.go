@@ -23,7 +23,7 @@ func (e *Executor) Add(a action.Action) *Executor {
 	return e
 }
 
-func (e *Executor) ExecuteOne(ctx context.Context) (action.Result, error) {
+func (e *Executor) Do(ctx context.Context) (action.Result, error) {
 	cb := action.DoNothing
 	e.mu.Lock()
 

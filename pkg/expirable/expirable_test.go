@@ -14,7 +14,7 @@ func TestExpirable_Expect42(t *testing.T) {
 			return 42, nil
 		}).
 		WithTimeout(2 * time.Second).
-		Go(nil)
+		Do(nil)
 
 	if res != 42 {
 		t.Errorf("Expected 42, got %v", res)
@@ -33,7 +33,7 @@ func TestExpirable_ExpectTimeout(t *testing.T) {
 			})
 		}).
 		WithTimeout(1 * time.Second).
-		Go(nil)
+		Do(nil)
 
 	if res == 42 {
 		t.Errorf("Should not have got 42")
@@ -52,7 +52,7 @@ func TestExpirable_ShouldNotTimeout(t *testing.T) {
 			})
 		}).
 		WithTimeout(2 * time.Second).
-		Go(nil)
+		Do(nil)
 
 	if res != 42 {
 		t.Errorf("Expected 42, got %v", res)
@@ -78,7 +78,7 @@ func TestExpirable_ExpectCancellation(t *testing.T) {
 			})
 		}).
 		WithTimeout(10 * time.Second).
-		Go(ctx)
+		Do(ctx)
 
 	if !operationCalled {
 		t.Errorf("action should have been called")
@@ -109,7 +109,7 @@ func TestExpirable_ExpectCancellationDuringDelay(t *testing.T) {
 			})
 		}).
 		WithTimeout(10 * time.Second).
-		Go(ctx)
+		Do(ctx)
 
 	if operationCalled {
 		t.Errorf("Action should not have been called")
