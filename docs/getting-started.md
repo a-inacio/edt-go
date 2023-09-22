@@ -55,10 +55,25 @@ res, err := expirable.NewBuilder().
         })
     }).
     WithTimeout(10 * time.Second).
-    Go(ctx)
+    Do(ctx)
 ```
 
 The code above sets up an `Expirable`, using the `Builder` method, that will wait up to `10 seconds` to execute a task.
 The task is just an `Awaitable` (a simple Construct) that will return `42` after `5 seconds` elapse. 
 
 > 👉 Simpler Constructs do not offer a Builder method, because there would not be added value with the extra verbosity.
+
+## Conventions
+
+### If it has a `Do`, then it is an action
+
+Some of the constructs allow combinations like: chaining, referencing or wrapping `actions`. Since this library has a philosophy around this loose concept (it is just a function with a specific, yet simple signature) all constructs that can result of an execution of "something", have a method named `Do` that respects this convention. It becomes, then, very simple to implement the aforementioned combinations.
+
+### If it has `Must` in the name, it means it can `panic`
+
+This library has a very strict usage of `panic`, so the developer can use it with peace of mind, not worrying about schizophrenic behavior resulting from misusage.
+
+Nevertheless, in some application designs, it is desirable to fully halt execution if some critical conditions are not met.
+One good example, where just crashing is preferable, so a developer can detect a mistake (preferably at early startup times) comes from dealing with unsatisfied dependencies. Or even to break everything to ask the final user to perform a certain mandatory configuration step (e.g. initialize a config file with credentials that can then be used as a dependency by the application).
+
+To avoid the typical `Go` code that tests for an error and then `panics`, this library conventions that any method that is prefixed with `Must` will terminate program execution in case of an error.

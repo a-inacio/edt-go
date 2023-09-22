@@ -14,7 +14,7 @@ In a nutshell you can block your execution until an `Event` is `Published`.
 expectable.NewBuilder().
     On(hub).
     Expect(SomeEvent{}).
-    Go(context.Background())
+    Do(context.Background())
 ```
 
 The code above will block until `SomeEvent` gets published.
@@ -37,7 +37,7 @@ type SomeEvent struct {
 res, err := expectable.NewBuilder().
     On(hub).
     Expect(SomeEvent{}).
-    Go(context.Background())
+    Do(context.Background())
 
 ...
 
@@ -67,7 +67,7 @@ res, err := expectable.NewBuilder().
 
         return false
     }).
-    Go(context.Background())
+    Do(context.Background())
 }
 ```
 
@@ -87,7 +87,7 @@ defer cancel()
 res, err := expectable.NewBuilder().
     On(hub).
     Expect(SomeEvent{}).
-    Go(ctx)
+    Do(ctx)
 
 if err != nil {
 	// Deal with cancellation
@@ -105,7 +105,7 @@ res, err := expectable.NewBuilder().
     On(hub).
     Expect(SomeEvent{}).
 	WithTimeout(1 * time.Second).
-    Go(ctx)
+    Do(ctx)
 
 if err != nil {
 	// Deal with the timeout
