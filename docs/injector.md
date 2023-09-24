@@ -6,20 +6,20 @@ This construct allows you to append context information to any `Action` executio
 
 It only relies on Go's standard `context.Context` so, as long as you keep track of if it (something you should be doing anyway) your contextual information will be easily accessible.
 
-> 👉 Means you are not limited only to these library's constructs. 
+> 👉 Actually it means you are not limited only to these library's constructs it can be utilised standalone.
 
 ## Usage
 
 ### Setting Values
 
-There are two distinct patterns at play here:
+There are two distinct creational patterns at play here:
 
 - Singleton
 - Factory
 
 #### Singleton Instance
 
-An instance must be given, and it will be the same everytime it is retrieved.
+An instance must be given, and it will be the same every time it is retrieved.
 
 ```go
 dependencies := injector.WithContext(nil)
@@ -62,13 +62,15 @@ dependencies.SetFactory(func() SomeValue {
 })
 ```
 
+##### Functions limitations
+
+Though functions can have 0 or more arguments, **they must have one and only one return type.**
+
 ### Retrieving Values
 
-Independently of how the setter is defined, you get the values always in the same manner.
+Independently of the injected dependency's creational design pattern type (Singleton or Factory), you get the values in the same manner.
 
 ```go
-dependencies := injector.FromContext(ctx)
-
 value, err := injector.GetValue[SomeValue](dependencies)
 
 if err != nil {
@@ -76,9 +78,33 @@ if err != nil {
 }
 ```
 
-> ⚠️ Though you can use an interface, currently finding a dependency that implements such interface is not supported.
-> Only direct type names mather.
+#### Satisfying Interfaces
 
-## Inheriting contexts
+Not withstanding the type creational pattern, when retrieving a value by interface the injector will either look for an explicit definition of an interface dependency or it will look for all the known types and find the ones that implement such interface.
 
-🚧TODO
+This process only succeeds if there is exactly one resolution for the target type 
+interface.
+
+```go
+value, err := injector.GetValue[SomeInterface](dependencies)
+
+if err != nil {
+	// do something with `value`
+}
+```
+
+### Resolving Functions
+
+As an alternative, to explicitly set a factory for every single entity of your application, you can manually control this flow by resolving said functions manually. The same constraints of #Factory methods apply. 
+
+```go
+value, err := injector.Resolve[AnotherValue](
+	dependencies, 
+	func(value SomeValue) AnotherValue {  
+		return AnotherValue{message: value.message}  
+	})
+
+if err != nil {
+	// do something with `value`
+}
+```
