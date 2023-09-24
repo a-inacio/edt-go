@@ -64,7 +64,7 @@ dependencies.SetFactory(func() SomeValue {
 
 ##### Functions limitations
 
-Though functions can have 0 or more arguments, **they must have one and only one return type.**
+> ⚠️ Though functions can have 0 or more arguments, **they must have one and only one return type.**
 
 ### Retrieving Values
 
