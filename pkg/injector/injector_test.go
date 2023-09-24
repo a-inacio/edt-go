@@ -142,7 +142,7 @@ func TestWithContext_Satisfy_Func(t *testing.T) {
 		return SomeValue{message: "Hello EDT!"}
 	})
 
-	value, err := Satisfy[AnotherValue](injector, func(value SomeValue) AnotherValue {
+	value, err := Resolve[AnotherValue](injector, func(value SomeValue) AnotherValue {
 		return AnotherValue{message: value.message}
 	})
 
@@ -166,7 +166,7 @@ func TestWithContext_MustSatisfy_Func(t *testing.T) {
 		return SomeValue{message: "Hello EDT!"}
 	})
 
-	value := MustSatisfy[AnotherValue](injector, func(value SomeValue) AnotherValue {
+	value := MustResolve[AnotherValue](injector, func(value SomeValue) AnotherValue {
 		return AnotherValue{message: value.message}
 	})
 
@@ -202,6 +202,37 @@ func TestWithContext_Factory(t *testing.T) {
 
 	if value.counter != 2 {
 		t.Errorf("Expected %v, got %v", 2, value.counter)
+	}
+}
+
+func TestWithContext_FactoryWithArguments(t *testing.T) {
+	injector := WithContext(nil)
+
+	counter := 0
+	injector.SetSingleton(AnotherValue{counter: 10})
+	injector.SetFactory(func(value AnotherValue) SomeValue {
+		counter++
+		return SomeValue{counter: value.counter + counter}
+	})
+
+	value, err := Get[SomeValue](injector)
+
+	if err != nil {
+		t.Errorf("Should not have failed")
+	}
+
+	if value == nil {
+		t.Errorf("Should have gotten a value")
+	}
+
+	if value.counter != 11 {
+		t.Errorf("Expected %v, got %v", 11, value.counter)
+	}
+
+	value, _ = Get[SomeValue](injector)
+
+	if value.counter != 12 {
+		t.Errorf("Expected %v, got %v", 12, value.counter)
 	}
 }
 
@@ -354,7 +385,7 @@ func TestWithContext_MustSatisfy_Interface(t *testing.T) {
 		SetSingleton(NewYetAnotherTypeWithInterface("Hello EDT!")).
 		SetSingleton(&SomeValue{message: "Hello EDT!"})
 
-	value := MustSatisfy[AnotherValue](injector, func(value SomeInterface) AnotherValue {
+	value := MustResolve[AnotherValue](injector, func(value SomeInterface) AnotherValue {
 		return AnotherValue{message: value.SomeMethod()}
 	})
 
@@ -362,7 +393,7 @@ func TestWithContext_MustSatisfy_Interface(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
 
-	anotherValue := MustSatisfy[SomeInterface](injector, func(value *SomeValue) SomeInterface {
+	anotherValue := MustResolve[SomeInterface](injector, func(value *SomeValue) SomeInterface {
 		return NewYetAnotherTypeWithInterface(value.message)
 	})
 
@@ -382,7 +413,7 @@ func TestWithContext_MustSatisfy_InterfacePtr(t *testing.T) {
 		SetSingleton(NewYetAnotherTypeWithInterfacePtr("Hello EDT!")).
 		SetSingleton(&SomeValue{message: "Hello EDT!"})
 
-	value := MustSatisfy[AnotherValue](injector, func(value SomeInterface) AnotherValue {
+	value := MustResolve[AnotherValue](injector, func(value SomeInterface) AnotherValue {
 		return AnotherValue{message: value.SomeMethod()}
 	})
 
@@ -390,7 +421,7 @@ func TestWithContext_MustSatisfy_InterfacePtr(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
 
-	anotherValue := MustSatisfy[SomeInterface](injector, func(value *SomeValue) SomeInterface {
+	anotherValue := MustResolve[SomeInterface](injector, func(value *SomeValue) SomeInterface {
 		return NewYetAnotherTypeWithInterfacePtr(value.message)
 	})
 

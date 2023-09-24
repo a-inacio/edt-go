@@ -20,11 +20,11 @@ func toContext(parent context.Context, i *Injector) context.Context {
 	return context.WithValue(parent, reflect.TypeOf(Injector{}).PkgPath(), i)
 }
 
-func satisfyWithAnotherContext[T any](i *Injector, f interface{}, ctx context.Context) (*T, error) {
+func resolveWithContext[T any](i *Injector, f interface{}, ctx context.Context) (*T, error) {
 	t := reflect.TypeOf(f)
 
 	if isTypeFunc(t) {
-		value := i.getSatisfiedInterfaceProxy(f, nil)()
+		value := i.getResolvedFunctionProxy(f, nil)()
 
 		if value == nil {
 			return nil, nil
@@ -47,7 +47,7 @@ func getValueWithContext[T any](i *Injector, ctx context.Context) (*T, error) {
 	return castValue[T](value, t)
 }
 
-func (i *Injector) satisfyDependencies(fn reflect.Value, args []interface{}) interface{} {
+func (i *Injector) resolveDependencies(fn reflect.Value, args []interface{}) interface{} {
 	var paramValues []reflect.Value = nil
 
 	if args != nil {
@@ -171,10 +171,10 @@ func (i *Injector) setSingletonValue(value interface{}, t reflect.Type) {
 
 func (i *Injector) setSingletonFunc(value interface{}) {
 	_, t := getFuncReturnValue(value)
-	i.data[getName(t)] = i.getSatisfiedInterfaceProxy(value, nil)
+	i.data[getName(t)] = i.getResolvedFunctionProxy(value, nil)
 }
 
-func (i *Injector) getSatisfiedInterfaceProxy(value interface{}, ctx context.Context) func() interface{} {
+func (i *Injector) getResolvedFunctionProxy(value interface{}, ctx context.Context) func() interface{} {
 	fn, t := getFuncReturnValue(value)
 
 	fnArgs := getArgTypes(value)
@@ -186,7 +186,7 @@ func (i *Injector) getSatisfiedInterfaceProxy(value interface{}, ctx context.Con
 	if len(fnArgs) == 0 {
 		return func() interface{} {
 			if singleton == nil {
-				singleton = i.satisfyDependencies(fn, nil)
+				singleton = i.resolveDependencies(fn, nil)
 			}
 
 			return singleton
@@ -200,7 +200,7 @@ func (i *Injector) getSatisfiedInterfaceProxy(value interface{}, ctx context.Con
 					return err
 				}
 
-				singleton = i.satisfyDependencies(fn, values)
+				singleton = i.resolveDependencies(fn, values)
 			}
 
 			return singleton
@@ -234,5 +234,31 @@ func castValue[T any](value interface{}, t reflect.Type) (*T, error) {
 		}
 
 		return &typedVal, nil
+	}
+}
+
+func (i *Injector) setFactoryFunction(factory interface{}) {
+	fn, returnType := getFuncReturnValue(factory)
+
+	i.types = append(i.types, returnType)
+
+	key := getName(returnType)
+
+	fnArgs := getArgTypes(factory)
+
+	if len(fnArgs) == 0 {
+		i.data[key] = func() interface{} {
+			return i.resolveDependencies(fn, nil)
+		}
+	} else {
+		i.data[key] = func() interface{} {
+			values, err := i.getValues(fnArgs, nil)
+
+			if err != nil {
+				return err
+			}
+
+			return i.resolveDependencies(fn, values)
+		}
 	}
 }

@@ -70,5 +70,5 @@ func MustSatisfyFromContext[T any](ctx context.Context, f interface{}) T {
 		panic("no injector in context")
 	}
 
-	return MustSatisfy[T](i, f)
+	return MustResolve[T](i, f)
 }
