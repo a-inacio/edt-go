@@ -1,3 +1,3 @@
-# Exectutor
+# Executor
 
 🚧
