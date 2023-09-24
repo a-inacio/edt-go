@@ -95,7 +95,7 @@ if err != nil {
 
 ### Resolving Functions
 
-As an alternative, to explicitly set a factory for every single entity of your application, you can manually control this flow by resolving said functions manually. The same constraints of #Factory methods apply. 
+As an alternative, to explicitly set a factory for every single entity of your application, you can manually control this flow by resolving said functions manually. The same constraints of [Factory](#factory) methods apply. 
 
 ```go
 value, err := injector.Resolve[AnotherValue](
