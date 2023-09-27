@@ -36,3 +36,34 @@ func TestFuture(t *testing.T) {
 		t.Errorf("Should have not failed - %v", err)
 	}
 }
+
+func TestFutureChain(t *testing.T) {
+	promise := Future(nil,
+		func(ctx context.Context) (action.Result, error) {
+			return 20, nil
+		}).
+		Then(func(ctx context.Context) (action.Result, error) {
+			chained, _ := GetChainedValue[int](ctx)
+			return *chained + 22, nil
+		})
+
+	res, err := GetValue[int](promise)
+
+	if *res != 42 {
+		t.Errorf("Expected 42, got %v", res)
+	}
+
+	if err != nil {
+		t.Errorf("Should have not failed - %v", err)
+	}
+
+	res, err = GetValue[int](promise)
+
+	if *res != 42 {
+		t.Errorf("Expected 42, got %v", res)
+	}
+
+	if err != nil {
+		t.Errorf("Should have not failed - %v", err)
+	}
+}
