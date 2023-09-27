@@ -1,4 +1,4 @@
-package awaitable
+package promisse
 
 import (
 	"context"
@@ -8,19 +8,19 @@ import (
 	"sync"
 )
 
-type Awaitable struct {
+type Promise struct {
 	ctx context.Context
 	wg  sync.WaitGroup
 	r   action.Result
 	e   error
 }
 
-func AwaitFor(ctx context.Context, a action.Action) *Awaitable {
+func Future(ctx context.Context, a action.Action) *Promise {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	await := &Awaitable{ctx: ctx}
+	await := &Promise{ctx: ctx}
 
 	await.wg.Add(1)
 
@@ -32,7 +32,7 @@ func AwaitFor(ctx context.Context, a action.Action) *Awaitable {
 	return await
 }
 
-func GetValue[T any](a *Awaitable) (*T, error) {
+func GetValue[T any](a *Promise) (*T, error) {
 	a.wg.Wait()
 
 	if a.e != nil {

@@ -1,4 +1,4 @@
-package awaitable
+package promisse
 
 import (
 	"context"
@@ -8,15 +8,15 @@ import (
 	"time"
 )
 
-func TestAwaitFor(t *testing.T) {
-	awaitable := AwaitFor(nil, expirable.NewBuilder().
+func TestFuture(t *testing.T) {
+	promise := Future(nil, expirable.NewBuilder().
 		FromOperation(func(ctx context.Context) (action.Result, error) {
 			return 42, nil
 		}).
 		WithTimeout(2*time.Second).
 		Do)
 
-	res, err := GetValue[int](awaitable)
+	res, err := GetValue[int](promise)
 
 	if *res != 42 {
 		t.Errorf("Expected 42, got %v", res)
@@ -26,7 +26,7 @@ func TestAwaitFor(t *testing.T) {
 		t.Errorf("Should have not failed - %v", err)
 	}
 
-	res, err = GetValue[int](awaitable)
+	res, err = GetValue[int](promise)
 
 	if *res != 42 {
 		t.Errorf("Expected 42, got %v", res)
