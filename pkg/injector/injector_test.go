@@ -457,3 +457,23 @@ func TestMustGetValueFromContext(t *testing.T) {
 		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
 	}
 }
+
+func TestSatisfyContextWhenRequired(t *testing.T) {
+	injector := WithContext(nil)
+
+	ctx := injector.Context()
+
+	value := MustGet[context.Context](injector)
+
+	if ctx != value {
+		t.Errorf("Expected to be able to resolve a context.Context")
+	}
+
+	value = MustResolve[context.Context](injector, func(ctx context.Context) context.Context {
+		return ctx
+	})
+
+	if ctx != value {
+		t.Errorf("Expected to be able to resolve a context.Context")
+	}
+}

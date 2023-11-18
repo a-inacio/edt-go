@@ -86,7 +86,13 @@ func (i *Injector) getValue(t reflect.Type, ctx context.Context) (interface{}, e
 	// Fetch the value from the map using the key.
 	getter, ok := i.data[key]
 	if !ok {
-		if isInterface {
+		if isTypeContext(t) {
+			if ctx == nil {
+				ctx = i.Context()
+			}
+
+			return ctx, nil
+		} else if isInterface {
 			targets := getTypesThatImplement(i.types, t)
 
 			if len(targets) != 1 {
@@ -99,12 +105,6 @@ func (i *Injector) getValue(t reflect.Type, ctx context.Context) (interface{}, e
 					return nil, fmt.Errorf("unable to satisfy dependency implementing interface %s with type %s", key, ikey)
 				}
 			}
-		} else if isTypeContext(t) {
-			if ctx == nil {
-				ctx = i.Context()
-			}
-
-			return ctx, nil
 		} else {
 			return nil, fmt.Errorf("dependency not found %s", key)
 		}
