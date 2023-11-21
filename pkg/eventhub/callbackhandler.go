@@ -22,7 +22,7 @@ func (cbh callbackHandler) Handler(ctx context.Context, e event.Event) error {
 }
 
 func ToHandler(cb func(ctx context.Context, e event.Event) error) Handler {
-	return callbackHandler{
+	return &callbackHandler{
 		cb: cb,
 	}
 }
