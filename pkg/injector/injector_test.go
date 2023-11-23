@@ -477,3 +477,17 @@ func TestSatisfyContextWhenRequired(t *testing.T) {
 		t.Errorf("Expected to be able to resolve a context.Context")
 	}
 }
+
+func TestMustGetValuePtr(t *testing.T) {
+	injector := WithContext(nil)
+
+	injector.
+		SetSingleton(NewYetAnotherTypeWithInterfacePtr("Hello EDT!")).
+		SetSingleton(&SomeValue{message: "Hello EDT!"})
+
+	value := MustGet[*SomeValue](injector)
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+}

@@ -21,7 +21,7 @@ func Get[T any](i *Injector) (*T, error) {
 // MustGet will attempt to get the value of a type T from the injector, and panic if it is not found.
 // Use this method if you want to enforce that a dependency is present avoiding the error checking at the cost of halting execution.
 func MustGet[T any](i *Injector) T {
-	value, err := Get[T](i)
+	value, err := getValueWithContext[T](i, nil)
 	if err != nil {
 		panic(fmt.Sprintf("missing dependency - %s", err.Error()))
 	}
