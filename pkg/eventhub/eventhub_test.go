@@ -112,7 +112,8 @@ func TestHub_PublishAndSubscribeWithGenericCallbacks(t *testing.T) {
 	hub := NewEventHub(nil)
 
 	gotCalled := 0
-	hub.RegisterHandler(event.WithName("SomeEvent"), ToHandler(func(ctx context.Context, e event.Event) error {
+	ev := event.WithName("SomeEvent")
+	hub.RegisterHandler(ev, ToHandler(ev, func(ctx context.Context, e event.Event) error {
 		gotCalled++
 		return nil
 	}))
@@ -170,6 +171,31 @@ func TestHub_PublishAndSubscribeWithActionWithContext(t *testing.T) {
 	}
 }
 
+func TestHub_UnregisterWithAction(t *testing.T) {
+	hub := NewEventHub(nil)
+
+	gotCalledCount := 0
+	handler := hub.Subscribe(SomeEvent{}, func(ctx context.Context) (action.Result, error) {
+		gotCalledCount += 1
+		return action.Nothing()
+	})
+
+	wg := hub.Publish(SomeEvent{}, nil)
+	wg.Wait()
+
+	if gotCalledCount != 1 {
+		t.Errorf("The callback should have been invoked the first time")
+	}
+
+	hub.UnregisterHandler(SomeEvent{}, handler)
+	wg = hub.Publish(SomeEvent{}, nil)
+	wg.Wait()
+
+	if gotCalledCount > 1 {
+		t.Errorf("The callback should not have been invoked this time")
+	}
+}
+
 func TestHub_UnsubscribeWithAction(t *testing.T) {
 	hub := NewEventHub(nil)
 
@@ -183,14 +209,14 @@ func TestHub_UnsubscribeWithAction(t *testing.T) {
 	wg.Wait()
 
 	if gotCalledCount != 1 {
-		t.Errorf("The handler should have been called the first time")
+		t.Errorf("The callback should have been invoked the first time")
 	}
 
-	hub.UnregisterHandler(SomeEvent{}, handler)
+	hub.Unsubscribe(handler)
 	wg = hub.Publish(SomeEvent{}, nil)
 	wg.Wait()
 
 	if gotCalledCount > 1 {
-		t.Errorf("The handler should not have been called this time")
+		t.Errorf("The callback should not have been invoked this time")
 	}
 }
