@@ -52,10 +52,12 @@ func GetName(event Event) string {
 	return t.Name()
 }
 
+// WithName creates a new GenericNamedEvent with the given name
 func WithName(name string) *GenericNamedEvent {
 	return &GenericNamedEvent{name: name}
 }
 
+// WithNameAndKeyValues creates a new GenericNamedEvent with the given name, initializing it with the given key values
 func WithNameAndKeyValues(name string, kv ...interface{}) *GenericNamedEvent {
 	m := make(map[string]interface{})
 	for i := 0; i < len(kv); i += 2 {
@@ -67,19 +69,22 @@ func WithNameAndKeyValues(name string, kv ...interface{}) *GenericNamedEvent {
 	return &GenericNamedEvent{name: name, Values: m}
 }
 
-func GetValue[T any](event Event) (*T, error) {
-	t := reflect.TypeOf((*T)(nil)).Elem()
-
+// ValueOf returns the value of the event as the given type, if the event cannot be converted to the given type an error is returned.
+func ValueOf[T any](event Event) (*T, error) {
 	// Cast the value to the desired type.
 	typedVal, ok := event.(T)
 	if !ok {
+		t := reflect.TypeOf((*T)(nil)).Elem()
 		return nil, fmt.Errorf("value is not of type %s", t.String())
 	}
 
 	return &typedVal, nil
 }
 
-func Get[T any](ctx context.Context) (*T, error) {
+// FromContext attempts to retrieve an event of the given type from the context.
+// If the event is not found, an error is returned.
+// Use this method in callback functions associated to event subscriptions.
+func FromContext[T any](ctx context.Context) (*T, error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	i, ok := ctx.Value(t.PkgPath()).(T)
 

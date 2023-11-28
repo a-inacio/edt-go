@@ -111,7 +111,7 @@ func (h *EventHub) Publish(e event.Event, ctx context.Context) *sync.WaitGroup {
 	return &wg
 }
 
-// Subscribe subscribes to an event
+// Subscribe subscribes to an event, returning an ActionHandler that can be used to later unsubscribe from.
 func (h *EventHub) Subscribe(e event.Event, action action.Action) ActionHandler {
 	handler := ToHandler(e, func(ctx context.Context, e event.Event) error {
 		if ctx == nil {
@@ -131,7 +131,7 @@ func (h *EventHub) Subscribe(e event.Event, action action.Action) ActionHandler 
 	return handler
 }
 
-// Unsubscribe subscribes to an event
+// Unsubscribe unsubscribes to an event, using the ActionHandler returned by Subscribe.
 func (h *EventHub) Unsubscribe(handler ActionHandler) {
 	h.UnregisterHandler(handler.TargetEvent(), handler)
 }

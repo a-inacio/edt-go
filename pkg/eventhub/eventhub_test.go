@@ -23,7 +23,7 @@ type SomeEventHandler struct {
 
 func (h *SomeEventHandler) Handler(ctx context.Context, e event.Event) error {
 	h.GotCalled = true
-	se, _ := event.GetValue[SomeEvent](e)
+	se, _ := event.ValueOf[SomeEvent](e)
 
 	if se.ShouldFail {
 		return errors.New("I was asked to fail")
@@ -39,7 +39,7 @@ type SomeGenericEventHandler struct {
 
 func (h *SomeGenericEventHandler) Handler(ctx context.Context, e event.Event) error {
 	h.GotCalled = true
-	gne, _ := event.GetValue[event.GenericNamedEvent](e)
+	gne, _ := event.ValueOf[event.GenericNamedEvent](e)
 
 	values := gne.Values
 
@@ -153,7 +153,7 @@ func TestHub_PublishAndSubscribeWithActionWithContext(t *testing.T) {
 
 	hub.Subscribe(SomeEvent{}, func(ctx context.Context) (action.Result, error) {
 		gotCalled = true
-		ev, _ := event.Get[SomeEvent](ctx)
+		ev, _ := event.FromContext[SomeEvent](ctx)
 		result = ev.SomeValue
 		return action.Nothing()
 	})
