@@ -6,15 +6,19 @@ import (
 	"sync"
 )
 
+// Executor is a simple implementation of action.Action that executes a list of actions in sequence.
+// It can be utilised as a command queue for executing actions.
 type Executor struct {
 	mu      sync.Mutex
 	actions []action.Action
 }
 
+// NewExecutor creates a new Executor.
 func NewExecutor() *Executor {
 	return &Executor{}
 }
 
+// Add adds an action to the list of actions to be executed.
 func (e *Executor) Add(a action.Action) *Executor {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -23,6 +27,7 @@ func (e *Executor) Add(a action.Action) *Executor {
 	return e
 }
 
+// Do executes one action of the list of actions. If there are no actions left, it behaves like action.DoNothing.
 func (e *Executor) Do(ctx context.Context) (action.Result, error) {
 	cb := action.DoNothing
 	e.mu.Lock()
