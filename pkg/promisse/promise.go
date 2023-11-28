@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/a-inacio/edt-go/pkg/action"
+	"github.com/a-inacio/edt-go/pkg/cancellable"
 	"reflect"
 	"sync"
 )
@@ -11,8 +12,9 @@ import (
 type Promise struct {
 	ctx context.Context
 	wg  sync.WaitGroup
-	r   action.Result
-	e   error
+	res action.Result
+	err error
+	cb  *cancellable.Cancellable
 }
 
 // Future creates a new Promise from the given Action.
@@ -21,14 +23,21 @@ func Future(ctx context.Context, a action.Action) *Promise {
 		ctx = context.Background()
 	}
 
-	p := &Promise{ctx: ctx}
+	p := &Promise{
+		ctx: ctx,
+	}
+
+	p.cb = cancellable.
+		NewBuilder().
+		FromAction(a).
+		WithWaitGroup(&p.wg).
+		Build()
 
 	p.wg.Add(1)
 
-	go func(ctx context.Context, a action.Action) {
-		defer p.wg.Done()
-		p.r, p.e = a(ctx)
-	}(ctx, a)
+	go func() {
+		p.res, p.err = p.cb.Do(ctx)
+	}()
 
 	return p
 }
@@ -37,11 +46,11 @@ func Future(ctx context.Context, a action.Action) *Promise {
 func (p *Promise) Then(a action.Action) *Promise {
 	return Future(p.ctx, func(ctx context.Context) (action.Result, error) {
 		p.wg.Wait()
-		if p.e != nil {
-			return nil, p.e
+		if p.err != nil {
+			return nil, p.err
 		}
 
-		chainedCtx := context.WithValue(p.ctx, reflect.TypeOf(Promise{}).PkgPath(), p.r)
+		chainedCtx := context.WithValue(p.ctx, reflect.TypeOf(Promise{}).PkgPath(), p.res)
 
 		return a(chainedCtx)
 	})
@@ -67,15 +76,15 @@ func FromContext[T any](ctx context.Context) (*T, error) {
 func ValueOf[T any](a *Promise) (*T, error) {
 	a.wg.Wait()
 
-	if a.e != nil {
+	if a.err != nil {
 		// Execution failed
-		return nil, a.e
+		return nil, a.err
 	}
 
 	t := reflect.TypeOf((*T)(nil)).Elem()
 
 	// Cast the value to the desired type.
-	typedVal, ok := a.r.(T)
+	typedVal, ok := a.res.(T)
 	if !ok {
 		key := t.String()
 		return nil, fmt.Errorf("the promisse result %s is not of type %T", key, typedVal)

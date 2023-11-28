@@ -20,8 +20,8 @@ func (builder *Builder) FromAction(action action.Action) *Builder {
 	return builder
 }
 
-func (builder *Builder) WithWaitGroup(wg sync.WaitGroup) *Builder {
-	builder.wg = &wg
+func (builder *Builder) WithWaitGroup(wg *sync.WaitGroup) *Builder {
+	builder.wg = wg
 	return builder
 }
 
