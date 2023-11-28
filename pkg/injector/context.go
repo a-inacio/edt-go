@@ -59,7 +59,9 @@ func MustGetFromContext[T any](ctx context.Context) T {
 	return *value
 }
 
-func MustSatisfyFromContext[T any](ctx context.Context, f interface{}) T {
+// MustResolveFromContext will attempt to resolve the arguments of a function with a return a type T, from the given context.
+// If all arguments can be satisfied, the function is called, it will panic otherwise.
+func MustResolveFromContext[T any](ctx context.Context, f interface{}) T {
 	if ctx == nil {
 		panic("context cannot be nil")
 	}

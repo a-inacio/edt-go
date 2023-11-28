@@ -458,6 +458,22 @@ func TestMustGetValueFromContext(t *testing.T) {
 	}
 }
 
+func TestMustResolveFromContext_Func(t *testing.T) {
+	ctx := WithContext(nil).
+		SetSingleton(func() SomeValue {
+			return SomeValue{message: "Hello EDT!"}
+		}).
+		Context()
+
+	value := MustResolveFromContext[AnotherValue](ctx, func(value SomeValue) AnotherValue {
+		return AnotherValue{message: value.message}
+	})
+
+	if value.message != "Hello EDT!" {
+		t.Errorf("Expected %s, got %s", "Hello EDT!", value.message)
+	}
+}
+
 func TestSatisfyContextWhenRequired(t *testing.T) {
 	injector := WithContext(nil)
 
