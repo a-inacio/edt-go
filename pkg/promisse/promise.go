@@ -15,6 +15,7 @@ type Promise struct {
 	e   error
 }
 
+// Future creates a new Promise from the given Action.
 func Future(ctx context.Context, a action.Action) *Promise {
 	if ctx == nil {
 		ctx = context.Background()
@@ -32,6 +33,7 @@ func Future(ctx context.Context, a action.Action) *Promise {
 	return p
 }
 
+// Then chains a new Promise from the given Action, into an existent Promise.
 func (p *Promise) Then(a action.Action) *Promise {
 	return Future(p.ctx, func(ctx context.Context) (action.Result, error) {
 		p.wg.Wait()
@@ -45,7 +47,9 @@ func (p *Promise) Then(a action.Action) *Promise {
 	})
 }
 
-func GetChainedValue[T any](ctx context.Context) (*T, error) {
+// FromContext returns the chained value from the given context.
+// Use this method within a chained action.
+func FromContext[T any](ctx context.Context) (*T, error) {
 	val := ctx.Value(reflect.TypeOf(Promise{}).PkgPath())
 
 	t := reflect.TypeOf((*T)(nil)).Elem()
@@ -59,7 +63,8 @@ func GetChainedValue[T any](ctx context.Context) (*T, error) {
 	return &typedVal, nil
 }
 
-func GetValue[T any](a *Promise) (*T, error) {
+// ValueOf resolves and returns the value of the promise as the given type, if the promise cannot be converted to the given type an error is returned.
+func ValueOf[T any](a *Promise) (*T, error) {
 	a.wg.Wait()
 
 	if a.e != nil {
@@ -73,7 +78,7 @@ func GetValue[T any](a *Promise) (*T, error) {
 	typedVal, ok := a.r.(T)
 	if !ok {
 		key := t.String()
-		return nil, fmt.Errorf("value for key %s is not of type %T", key, typedVal)
+		return nil, fmt.Errorf("the promisse result %s is not of type %T", key, typedVal)
 	}
 
 	return &typedVal, nil

@@ -16,7 +16,7 @@ func TestFuture(t *testing.T) {
 		WithTimeout(2*time.Second).
 		Do)
 
-	res, err := GetValue[int](promise)
+	res, err := ValueOf[int](promise)
 
 	if *res != 42 {
 		t.Errorf("Expected 42, got %v", res)
@@ -26,7 +26,7 @@ func TestFuture(t *testing.T) {
 		t.Errorf("Should have not failed - %v", err)
 	}
 
-	res, err = GetValue[int](promise)
+	res, err = ValueOf[int](promise)
 
 	if *res != 42 {
 		t.Errorf("Expected 42, got %v", res)
@@ -43,11 +43,11 @@ func TestFutureChain(t *testing.T) {
 			return 20, nil
 		}).
 		Then(func(ctx context.Context) (action.Result, error) {
-			chained, _ := GetChainedValue[int](ctx)
+			chained, _ := FromContext[int](ctx)
 			return *chained + 22, nil
 		})
 
-	res, err := GetValue[int](promise)
+	res, err := ValueOf[int](promise)
 
 	if *res != 42 {
 		t.Errorf("Expected 42, got %v", res)
@@ -57,7 +57,7 @@ func TestFutureChain(t *testing.T) {
 		t.Errorf("Should have not failed - %v", err)
 	}
 
-	res, err = GetValue[int](promise)
+	res, err = ValueOf[int](promise)
 
 	if *res != 42 {
 		t.Errorf("Expected 42, got %v", res)
