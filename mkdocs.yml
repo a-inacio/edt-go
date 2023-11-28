@@ -66,9 +66,10 @@ nav:
       - loopable.md
       - statemachine.md
     - Concurrency:
-      - promise.md
+      - cancellable.md
       - expectable.md
       - expirable.md
+      - promise.md
   - Getting Started: getting-started.md
   - A Golang primer: a-golang-primer.md
 

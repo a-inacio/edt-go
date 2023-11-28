@@ -437,7 +437,7 @@ Effectively both samples have equivalent behavior (it is just a matter of expres
 
 #### Graceful shutdown
 
-This behavior can be achieved by hooking the `os.Interrupta`, the standard library provides a convenient decorator that does exactly that:
+This behavior can be achieved by hooking the `os.Interrupt`, the standard library provides a convenient decorator that does exactly that:
 
 ```go
 ctx, cancel := context.WithSignal(context.Background(), os.Interrupt)

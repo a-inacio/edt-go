@@ -35,9 +35,10 @@ These Constructs will help you on specific scenarios where you want to have your
 
 These Constructs will help you on specific scenarios where you need to deal with asynchronous operations:
 
- - Promise
+ - Cancellable
  - Expectable
  - Expirable
+ - Promise
 
 ## Construct Builders
 
