@@ -9,38 +9,40 @@ import (
 )
 
 func TestFuture(t *testing.T) {
-	promise := Future(nil, expirable.NewBuilder().
-		FromOperation(func(ctx context.Context) (action.Result, error) {
-			return 42, nil
-		}).
-		WithTimeout(2*time.Second).
-		Do)
+	promise := Future(
+		expirable.
+			NewBuilder().
+			FromOperation(func(ctx context.Context) (action.Result, error) {
+				return 42, nil
+			}).
+			WithTimeout(2 * time.Second).
+			Do)
 
 	go promise.Do(nil)
 
 	res, err := ValueOf[int](promise)
 
-	if *res != 42 {
-		t.Errorf("Expected 42, got %v", res)
-	}
-
 	if err != nil {
 		t.Errorf("Should have not failed - %v", err)
+	}
+
+	if *res != 42 {
+		t.Errorf("Expected 42, got %v", res)
 	}
 
 	res, err = ValueOf[int](promise)
 
-	if *res != 42 {
-		t.Errorf("Expected 42, got %v", res)
-	}
-
 	if err != nil {
 		t.Errorf("Should have not failed - %v", err)
+	}
+
+	if *res != 42 {
+		t.Errorf("Expected 42, got %v", res)
 	}
 }
 
 func TestFutureChain(t *testing.T) {
-	promise := Future(nil,
+	promise := Future(
 		func(ctx context.Context) (action.Result, error) {
 			return 20, nil
 		}).

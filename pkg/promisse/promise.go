@@ -9,25 +9,22 @@ import (
 	"sync"
 )
 
+// Promise is a promise of a future value.
+// It can be chained with other promises.
 type Promise struct {
-	ctx  context.Context
-	wg   sync.WaitGroup
-	res  action.Result
-	err  error
-	cb   *cancellable.Cancellable
-	root *Promise
-	next *Promise
+	wg      sync.WaitGroup
+	res     action.Result
+	err     error
+	cb      *cancellable.Cancellable
+	root    *Promise
+	next    *Promise
+	mu      sync.Mutex
+	running bool
 }
 
 // Future creates a new Promise from the given Action.
-func Future(ctx context.Context, a action.Action) *Promise {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	p := &Promise{
-		ctx: ctx,
-	}
+func Future(a action.Action) *Promise {
+	p := &Promise{}
 
 	p.root = p
 
@@ -44,13 +41,13 @@ func Future(ctx context.Context, a action.Action) *Promise {
 
 // Then chains a new Promise from the given Action, into an existent Promise.
 func (p *Promise) Then(a action.Action) *Promise {
-	then := Future(p.ctx, func(ctx context.Context) (action.Result, error) {
+	then := Future(func(ctx context.Context) (action.Result, error) {
 		p.wg.Wait()
 		if p.err != nil {
 			return nil, p.err
 		}
 
-		chainedCtx := context.WithValue(p.ctx, reflect.TypeOf(Promise{}).PkgPath(), p.res)
+		chainedCtx := context.WithValue(ctx, reflect.TypeOf(Promise{}).PkgPath(), p.res)
 
 		return a(chainedCtx)
 	})
@@ -62,7 +59,7 @@ func (p *Promise) Then(a action.Action) *Promise {
 }
 
 // FromContext returns the chained value from the given context.
-// Use this method within a chained action.
+// Beware that this method is only applicable within a chained action.
 func FromContext[T any](ctx context.Context) (*T, error) {
 	val := ctx.Value(reflect.TypeOf(Promise{}).PkgPath())
 
@@ -78,18 +75,26 @@ func FromContext[T any](ctx context.Context) (*T, error) {
 }
 
 // ValueOf resolves and returns the value of the promise as the given type, if the promise cannot be converted to the given type an error is returned.
+// Resolving the promise is a blocking operation and will wait for all the promises to complete (or any to fail).
+// If a promise fails to execute, the actual error is returned.
+// Getting the value of a promise is an idempotent operation, it will always return the same value.
 func ValueOf[T any](a *Promise) (*T, error) {
-	a.wg.Wait()
+	lastChild := a
 
-	if a.err != nil {
+	for lastChild.next != nil {
+		lastChild = lastChild.next
+	}
+	lastChild.wg.Wait()
+
+	if a.root.err != nil {
 		// Execution failed
-		return nil, a.err
+		return nil, a.root.err
 	}
 
 	t := reflect.TypeOf((*T)(nil)).Elem()
 
 	// Cast the value to the desired type.
-	typedVal, ok := a.res.(T)
+	typedVal, ok := lastChild.res.(T)
 	if !ok {
 		key := t.String()
 		return nil, fmt.Errorf("the promisse result %s is not of type %T", key, typedVal)
@@ -98,12 +103,24 @@ func ValueOf[T any](a *Promise) (*T, error) {
 	return &typedVal, nil
 }
 
+// Do is the entry point to execute the promise and return the outcome.
+// Execution is cancelled if the context is cancelled
+// This operation can only be executed once, if you need to execute it multiple times, use the Future method to create a new promise.
+// You can use the ValueOf method to get the value of the promise in an idempotent way or in a deferred manner.
 func (p *Promise) Do(ctx context.Context) (action.Result, error) {
+	p.root.mu.Lock()
+	defer p.root.mu.Unlock()
+
+	if p.root.running {
+		return action.FromError(fmt.Errorf("promisse already running or completed"))
+	}
+
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	p.root.now(ctx)
+	p.root.running = true
+	p.root.execute(ctx)
 
 	lastChild := p.root
 
@@ -113,15 +130,25 @@ func (p *Promise) Do(ctx context.Context) (action.Result, error) {
 
 	lastChild.wg.Wait()
 
+	if p.root.err != nil {
+		// Execution failed
+		return nil, p.root.err
+	}
+
 	return p.res, p.err
 }
 
-func (p *Promise) now(ctx context.Context) {
+func (p *Promise) execute(ctx context.Context) {
 	go func() {
 		p.res, p.err = p.cb.Do(ctx)
 
+		if p.err != nil {
+			p.root.err = p.err
+			return
+		}
+
 		if p.next != nil {
-			p.next.now(ctx)
+			p.next.execute(ctx)
 		}
 	}()
 }
