@@ -10,11 +10,13 @@ import (
 )
 
 type Promise struct {
-	ctx context.Context
-	wg  sync.WaitGroup
-	res action.Result
-	err error
-	cb  *cancellable.Cancellable
+	ctx  context.Context
+	wg   sync.WaitGroup
+	res  action.Result
+	err  error
+	cb   *cancellable.Cancellable
+	root *Promise
+	next *Promise
 }
 
 // Future creates a new Promise from the given Action.
@@ -27,6 +29,8 @@ func Future(ctx context.Context, a action.Action) *Promise {
 		ctx: ctx,
 	}
 
+	p.root = p
+
 	p.cb = cancellable.
 		NewBuilder().
 		FromAction(a).
@@ -35,16 +39,12 @@ func Future(ctx context.Context, a action.Action) *Promise {
 
 	p.wg.Add(1)
 
-	go func() {
-		p.res, p.err = p.cb.Do(ctx)
-	}()
-
 	return p
 }
 
 // Then chains a new Promise from the given Action, into an existent Promise.
 func (p *Promise) Then(a action.Action) *Promise {
-	return Future(p.ctx, func(ctx context.Context) (action.Result, error) {
+	then := Future(p.ctx, func(ctx context.Context) (action.Result, error) {
 		p.wg.Wait()
 		if p.err != nil {
 			return nil, p.err
@@ -54,6 +54,11 @@ func (p *Promise) Then(a action.Action) *Promise {
 
 		return a(chainedCtx)
 	})
+
+	then.root = p.root
+	p.next = then
+
+	return then
 }
 
 // FromContext returns the chained value from the given context.
@@ -91,4 +96,32 @@ func ValueOf[T any](a *Promise) (*T, error) {
 	}
 
 	return &typedVal, nil
+}
+
+func (p *Promise) Do(ctx context.Context) (action.Result, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	p.root.now(ctx)
+
+	lastChild := p.root
+
+	for lastChild.next != nil {
+		lastChild = lastChild.next
+	}
+
+	lastChild.wg.Wait()
+
+	return p.res, p.err
+}
+
+func (p *Promise) now(ctx context.Context) {
+	go func() {
+		p.res, p.err = p.cb.Do(ctx)
+
+		if p.next != nil {
+			p.next.now(ctx)
+		}
+	}()
 }

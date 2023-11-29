@@ -16,6 +16,8 @@ func TestFuture(t *testing.T) {
 		WithTimeout(2*time.Second).
 		Do)
 
+	go promise.Do(nil)
+
 	res, err := ValueOf[int](promise)
 
 	if *res != 42 {
@@ -46,6 +48,8 @@ func TestFutureChain(t *testing.T) {
 			chained, _ := FromContext[int](ctx)
 			return *chained + 22, nil
 		})
+
+	go promise.Do(nil)
 
 	res, err := ValueOf[int](promise)
 
