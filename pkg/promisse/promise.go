@@ -19,6 +19,8 @@ type Promise struct {
 	root    *Promise
 	next    *Promise
 	mu      sync.Mutex
+	catch   *cancellable.Cancellable
+	finally *cancellable.Cancellable
 	running bool
 }
 
@@ -31,7 +33,6 @@ func Future(a action.Action) *Promise {
 	p.cb = cancellable.
 		NewBuilder().
 		FromAction(a).
-		WithWaitGroup(&p.wg).
 		Build()
 
 	p.wg.Add(1)
@@ -42,7 +43,6 @@ func Future(a action.Action) *Promise {
 // Then chains a new Promise from the given Action, into an existent Promise.
 func (p *Promise) Then(a action.Action) *Promise {
 	then := Future(func(ctx context.Context) (action.Result, error) {
-		p.wg.Wait()
 		if p.err != nil {
 			return nil, p.err
 		}
@@ -56,6 +56,31 @@ func (p *Promise) Then(a action.Action) *Promise {
 	p.next = then
 
 	return then
+}
+
+// Catch chains an action, that will only be executed, if the previous promise fails.
+// If the catch action fails, nothing happens, the error is ignored.
+// If the catch action succeeds, the result of the catch action will be propagated to the next promise.
+// If this operation is repeated, only the last catch action will be executed.
+func (p *Promise) Catch(a action.Action) *Promise {
+	p.catch = cancellable.
+		NewBuilder().
+		FromAction(a).
+		Build()
+
+	return p
+}
+
+// Finally chains an action, that will always be executed, regardless of any promise outcome.
+// If the finally action fails, nothing happens, the error is ignored.
+// There can only be one finally action, if this operation is repeated, only the last finally action will be executed.
+func (p *Promise) Finally(a action.Action) *Promise {
+	p.root.finally = cancellable.
+		NewBuilder().
+		FromAction(a).
+		Build()
+
+	return p
 }
 
 // FromContext returns the chained value from the given context.
@@ -79,12 +104,9 @@ func FromContext[T any](ctx context.Context) (*T, error) {
 // If a promise fails to execute, the actual error is returned.
 // Getting the value of a promise is an idempotent operation, it will always return the same value.
 func ValueOf[T any](a *Promise) (*T, error) {
-	lastChild := a
+	rootPromise := a.root
 
-	for lastChild.next != nil {
-		lastChild = lastChild.next
-	}
-	lastChild.wg.Wait()
+	rootPromise.wg.Wait()
 
 	if a.root.err != nil {
 		// Execution failed
@@ -94,7 +116,7 @@ func ValueOf[T any](a *Promise) (*T, error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 
 	// Cast the value to the desired type.
-	typedVal, ok := lastChild.res.(T)
+	typedVal, ok := rootPromise.res.(T)
 	if !ok {
 		key := t.String()
 		return nil, fmt.Errorf("the promisse result %s is not of type %T", key, typedVal)
@@ -115,6 +137,8 @@ func (p *Promise) Do(ctx context.Context) (action.Result, error) {
 		return action.FromError(fmt.Errorf("promisse already running or completed"))
 	}
 
+	defer p.root.wg.Done()
+
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -122,13 +146,10 @@ func (p *Promise) Do(ctx context.Context) (action.Result, error) {
 	p.root.running = true
 	p.root.execute(ctx)
 
-	lastChild := p.root
-
-	for lastChild.next != nil {
-		lastChild = lastChild.next
+	if p.root.finally != nil {
+		// Execute finally action
+		p.root.finally.Do(ctx)
 	}
-
-	lastChild.wg.Wait()
 
 	if p.root.err != nil {
 		// Execution failed
@@ -139,16 +160,27 @@ func (p *Promise) Do(ctx context.Context) (action.Result, error) {
 }
 
 func (p *Promise) execute(ctx context.Context) {
-	go func() {
-		p.res, p.err = p.cb.Do(ctx)
+	p.res, p.err = p.cb.Do(ctx)
 
-		if p.err != nil {
+	if p.err != nil {
+		if p.catch != nil {
+			// error handling in place:
+			// - will allow execution to continue
+			// - there is a chance to still get a result value
+			p.res, _ = p.catch.Do(ctx)
+
+			// clear error
+			p.err = nil
+		} else {
+			// no error handling, halt execution
 			p.root.err = p.err
 			return
 		}
+	}
 
-		if p.next != nil {
-			p.next.execute(ctx)
-		}
-	}()
+	if p.next != nil {
+		p.next.execute(ctx)
+	} else {
+		p.root.res = p.res
+	}
 }
