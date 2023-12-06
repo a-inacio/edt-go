@@ -29,8 +29,10 @@ func (builder *Builder) Build() *Cancellable {
 	wg := builder.wg
 	if wg == nil {
 		wg = &sync.WaitGroup{}
-		wg.Add(1)
 	}
+
+	wg.Add(1)
+
 	inst := &Cancellable{
 		action: builder.action,
 		wg:     wg,

@@ -93,10 +93,41 @@ func FromContext[T any](ctx context.Context) (*T, error) {
 	// Cast the value to the desired type.
 	typedVal, ok := val.(T)
 	if !ok {
-		return nil, fmt.Errorf("the chained valueis not of type %T", t.Name())
+		return nil, fmt.Errorf("the chained valueis not of type %s", t.Name())
 	}
 
 	return &typedVal, nil
+}
+
+// SliceFromContext returns a chained slice of values from the given context.
+// Beware that this method is only applicable within a chained action.
+func SliceFromContext[T any](ctx context.Context) ([]T, error) {
+	res, err := FromContext[action.Result](ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Cast the value to slice of action.Result
+	sliceOfResults, ok := (*res).([]action.Result)
+	if !ok {
+		return nil, fmt.Errorf("the promisse result %v is not a slice", res)
+	}
+
+	sliceRes := make([]T, len(sliceOfResults))
+
+	for i, r := range sliceOfResults {
+		// Cast the value to the desired type.
+		typedVal, ok := r.(T)
+		if !ok {
+			t := reflect.TypeOf((*T)(nil)).Elem()
+			key := t.String()
+			return nil, fmt.Errorf("the promisse result %v is not a slice of type %s", typedVal, key)
+		}
+		sliceRes[i] = typedVal
+	}
+
+	return sliceRes, nil
 }
 
 // ValueOf resolves and returns the value of the promise as the given type, if the promise cannot be converted to the given type an error is returned.
@@ -113,16 +144,45 @@ func ValueOf[T any](a *Promise) (*T, error) {
 		return nil, a.root.err
 	}
 
-	t := reflect.TypeOf((*T)(nil)).Elem()
-
 	// Cast the value to the desired type.
 	typedVal, ok := rootPromise.res.(T)
 	if !ok {
+		t := reflect.TypeOf((*T)(nil)).Elem()
 		key := t.String()
 		return nil, fmt.Errorf("the promisse result %s is not of type %T", key, typedVal)
 	}
 
 	return &typedVal, nil
+}
+
+func SliceOf[T any](a *Promise) ([]T, error) {
+	res, err := ValueOf[action.Result](a)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Cast the value to slice of action.Result
+	sliceOfResults, ok := (*res).([]action.Result)
+	if !ok {
+		return nil, fmt.Errorf("the promisse result %v is not a slice", res)
+	}
+
+	sliceRes := make([]T, len(sliceOfResults))
+
+	for i, r := range sliceOfResults {
+		// Cast the value to the desired type.
+		typedVal, ok := r.(T)
+		if !ok {
+			t := reflect.TypeOf((*T)(nil)).Elem()
+			key := t.String()
+			return nil, fmt.Errorf("the promisse result %v is not a slice of type %s", typedVal, key)
+		}
+		sliceRes[i] = typedVal
+	}
+
+	return sliceRes, nil
+
 }
 
 // Do is the entry point to execute the promise and return the outcome.
