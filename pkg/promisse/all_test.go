@@ -122,7 +122,7 @@ func TestFutureAllWithBailout(t *testing.T) {
 				return *chained + 2, nil // 12
 			},
 		).
-		WaitWithBailout().
+		WaitWithBailoutOnError().
 		Then(func(ctx context.Context) (action.Result, error) {
 			chained, _ := ChainedSliceOf[int](ctx)     // [11, 12]
 			return 19 + *chained[0] + *chained[1], nil // 42 = 19 + 11 + 12
@@ -160,7 +160,7 @@ func TestFutureAllWithBailoutAndError(t *testing.T) {
 				return action.FromErrorf("I'm not up to it")
 			},
 		).
-		WaitWithBailout().
+		WaitWithBailoutOnError().
 		Then(func(ctx context.Context) (action.Result, error) {
 			// This should never be executed!
 			gotCalled = true
@@ -193,7 +193,7 @@ func TestFutureAllWithCancel(t *testing.T) {
 				return *chained + 2, nil // 12
 			},
 		).
-		WaitWithCancel().
+		WaitWithCancellationOnError().
 		Then(func(ctx context.Context) (action.Result, error) {
 			chained, _ := ChainedSliceOf[int](ctx)     // [11, 12]
 			return 19 + *chained[0] + *chained[1], nil // 42 = 19 + 11 + 12
@@ -231,7 +231,7 @@ func TestFutureAllWithCancelAndError(t *testing.T) {
 				return action.FromErrorf("I'm not up to it")
 			},
 		).
-		WaitWithCancel().
+		WaitWithCancellationOnError().
 		Then(func(ctx context.Context) (action.Result, error) {
 			// This should never be executed!
 			gotCalled = true

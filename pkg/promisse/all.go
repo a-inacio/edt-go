@@ -12,8 +12,8 @@ import (
 // AllPromise encapsulates a new Promise for a complete fulfillment of one or more given Actions.
 // It must be chained back to a Promise by one of the following strategies:
 // - Wait: all actions must be fulfilled and completed.
-// - WaitWithBailout: all actions must be fulfilled, as soon as one of them fails the Promise fails and execution continues without waiting for the others.
-// - WaitWithCancel: all actions must be fulfilled, as soon as one of them fails the Promise fails, attempts to Cancel ongoing actions and execution continues.
+// - WaitWithBailoutOnError: all actions must be fulfilled, as soon as one of them fails the Promise fails and execution continues without waiting for the others.
+// - WaitWithCancellationOnError: all actions must be fulfilled, as soon as one of them fails the Promise fails, attempts to Cancel ongoing actions and execution continues.
 type AllPromise struct {
 	parent      *Promise
 	wg          sync.WaitGroup
@@ -24,22 +24,22 @@ type AllPromise struct {
 
 // All creates a new Promise for the complete fulfillment of one or more given Actions.
 func (p *Promise) All(actions ...action.Action) *AllPromise {
-	a := &AllPromise{
+	allP := &AllPromise{
 		parent:      p,
 		cancellable: make([]*cancellable.Cancellable, len(actions)),
 		res:         make([]action.Result, len(actions)),
 		err:         make([]error, len(actions)),
 	}
 
-	for i, action := range actions {
-		a.cancellable[i] = cancellable.
+	for i, a := range actions {
+		allP.cancellable[i] = cancellable.
 			NewBuilder().
-			FromAction(action).
-			WithWaitGroup(&a.wg).
+			FromAction(a).
+			WithWaitGroup(&allP.wg).
 			Build()
 	}
 
-	return a
+	return allP
 }
 
 // Wait waits for all actions to complete.
@@ -73,8 +73,8 @@ func (a *AllPromise) Wait() *Promise {
 	return then
 }
 
-// WaitWithBailout waits for all actions to complete, as soon as one of them fails the Promise fails and execution continues without waiting for the others.
-func (a *AllPromise) WaitWithBailout() *Promise {
+// WaitWithBailoutOnError waits for all actions to complete, as soon as one of them fails the Promise fails and execution continues without waiting for the others.
+func (a *AllPromise) WaitWithBailoutOnError() *Promise {
 	then := Future(func(ctx context.Context) (action.Result, error) {
 		if a.parent.err != nil {
 			return nil, a.parent.err
@@ -96,8 +96,8 @@ func (a *AllPromise) WaitWithBailout() *Promise {
 	return then
 }
 
-// WaitWithCancel waits for all actions to complete, as soon as one of them fails the Promise fails, attempts to Cancel ongoing actions and execution continues.
-func (a *AllPromise) WaitWithCancel() *Promise {
+// WaitWithCancellationOnError waits for all actions to complete, as soon as one of them fails the Promise fails, attempts to Cancel ongoing actions and execution continues.
+func (a *AllPromise) WaitWithCancellationOnError() *Promise {
 	then := Future(func(ctx context.Context) (action.Result, error) {
 		if a.parent.err != nil {
 			return nil, a.parent.err
