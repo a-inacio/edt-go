@@ -73,22 +73,16 @@ func TestFutureAll(t *testing.T) {
 func TestFutureAllWithError(t *testing.T) {
 	gotCalled := false
 
-	promise := Future(
+	promise := All(
 		func(ctx context.Context) (action.Result, error) {
-			return 10, nil
+			return 42, nil
+		},
+
+		action.DoNothing,
+
+		func(ctx context.Context) (action.Result, error) {
+			return action.FromErrorf("I'm not up to it")
 		}).
-		All(
-			func(ctx context.Context) (action.Result, error) {
-				chained, _ := ChainedValueOf[int](ctx)
-				return *chained + 1, nil // 11
-			},
-
-			action.DoNothing,
-
-			func(ctx context.Context) (action.Result, error) {
-				return action.FromErrorf("I'm not up to it")
-			},
-		).
 		Wait().
 		Then(func(ctx context.Context) (action.Result, error) {
 			// This should never be executed!
@@ -144,22 +138,16 @@ func TestFutureAllWithBailout(t *testing.T) {
 func TestFutureAllWithBailoutAndError(t *testing.T) {
 	gotCalled := false
 
-	promise := Future(
+	promise := All(
 		func(ctx context.Context) (action.Result, error) {
-			return 10, nil
+			return 42, nil
+		},
+
+		action.DoNothing,
+
+		func(ctx context.Context) (action.Result, error) {
+			return action.FromErrorf("I'm not up to it")
 		}).
-		All(
-			func(ctx context.Context) (action.Result, error) {
-				chained, _ := ChainedValueOf[int](ctx)
-				return *chained + 1, nil // 11
-			},
-
-			action.DoNothing,
-
-			func(ctx context.Context) (action.Result, error) {
-				return action.FromErrorf("I'm not up to it")
-			},
-		).
 		WaitWithBailoutOnError().
 		Then(func(ctx context.Context) (action.Result, error) {
 			// This should never be executed!
@@ -215,22 +203,16 @@ func TestFutureAllWithCancel(t *testing.T) {
 func TestFutureAllWithCancelAndError(t *testing.T) {
 	gotCalled := false
 
-	promise := Future(
+	promise := All(
 		func(ctx context.Context) (action.Result, error) {
-			return 10, nil
+			return 42, nil
+		},
+
+		action.DoNothing,
+
+		func(ctx context.Context) (action.Result, error) {
+			return action.FromErrorf("I'm not up to it")
 		}).
-		All(
-			func(ctx context.Context) (action.Result, error) {
-				chained, _ := ChainedValueOf[int](ctx)
-				return *chained + 1, nil // 11
-			},
-
-			action.DoNothing,
-
-			func(ctx context.Context) (action.Result, error) {
-				return action.FromErrorf("I'm not up to it")
-			},
-		).
 		WaitWithCancellationOnError().
 		Then(func(ctx context.Context) (action.Result, error) {
 			// This should never be executed!

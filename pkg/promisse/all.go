@@ -22,6 +22,12 @@ type AllPromise struct {
 	err         []error
 }
 
+// All is a helper that creates a new Promise for the complete fulfillment of one or more given Actions without a prior Future.
+// It is a shortcut for Future(action.DoNothing).All(actions...) and it is useful when the first Action is not relevant.
+func All(actions ...action.Action) *AllPromise {
+	return Future(action.DoNothing).All(actions...)
+}
+
 // All creates a new Promise for the complete fulfillment of one or more given Actions.
 func (p *Promise) All(actions ...action.Action) *AllPromise {
 	allP := &AllPromise{
