@@ -70,6 +70,43 @@ func TestFutureAll(t *testing.T) {
 	}
 }
 
+func TestFutureAllWithError(t *testing.T) {
+	gotCalled := false
+
+	promise := Future(
+		func(ctx context.Context) (action.Result, error) {
+			return 10, nil
+		}).
+		All(
+			func(ctx context.Context) (action.Result, error) {
+				chained, _ := ChainedValueOf[int](ctx)
+				return *chained + 1, nil // 11
+			},
+
+			action.DoNothing,
+
+			func(ctx context.Context) (action.Result, error) {
+				return action.FromErrorf("I'm not up to it")
+			},
+		).
+		Wait().
+		Then(func(ctx context.Context) (action.Result, error) {
+			// This should never be executed!
+			gotCalled = true
+			return action.Nothing()
+		})
+
+	_, err := promise.Do(nil)
+
+	if err == nil {
+		t.Errorf("Should have failed!")
+	}
+
+	if gotCalled {
+		t.Errorf("Should not have been called!")
+	}
+}
+
 func TestFutureAllWithBailout(t *testing.T) {
 	promise := Future(
 		func(ctx context.Context) (action.Result, error) {
@@ -104,6 +141,43 @@ func TestFutureAllWithBailout(t *testing.T) {
 	}
 }
 
+func TestFutureAllWithBailoutAndError(t *testing.T) {
+	gotCalled := false
+
+	promise := Future(
+		func(ctx context.Context) (action.Result, error) {
+			return 10, nil
+		}).
+		All(
+			func(ctx context.Context) (action.Result, error) {
+				chained, _ := ChainedValueOf[int](ctx)
+				return *chained + 1, nil // 11
+			},
+
+			action.DoNothing,
+
+			func(ctx context.Context) (action.Result, error) {
+				return action.FromErrorf("I'm not up to it")
+			},
+		).
+		WaitWithBailout().
+		Then(func(ctx context.Context) (action.Result, error) {
+			// This should never be executed!
+			gotCalled = true
+			return action.Nothing()
+		})
+
+	_, err := promise.Do(nil)
+
+	if err == nil {
+		t.Errorf("Should have failed!")
+	}
+
+	if gotCalled {
+		t.Errorf("Should not have been called!")
+	}
+}
+
 func TestFutureAllWithCancel(t *testing.T) {
 	promise := Future(
 		func(ctx context.Context) (action.Result, error) {
@@ -135,5 +209,42 @@ func TestFutureAllWithCancel(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Should have not failed - %v", err)
+	}
+}
+
+func TestFutureAllWithCancelAndError(t *testing.T) {
+	gotCalled := false
+
+	promise := Future(
+		func(ctx context.Context) (action.Result, error) {
+			return 10, nil
+		}).
+		All(
+			func(ctx context.Context) (action.Result, error) {
+				chained, _ := ChainedValueOf[int](ctx)
+				return *chained + 1, nil // 11
+			},
+
+			action.DoNothing,
+
+			func(ctx context.Context) (action.Result, error) {
+				return action.FromErrorf("I'm not up to it")
+			},
+		).
+		WaitWithCancel().
+		Then(func(ctx context.Context) (action.Result, error) {
+			// This should never be executed!
+			gotCalled = true
+			return action.Nothing()
+		})
+
+	_, err := promise.Do(nil)
+
+	if err == nil {
+		t.Errorf("Should have failed!")
+	}
+
+	if gotCalled {
+		t.Errorf("Should not have been called!")
 	}
 }

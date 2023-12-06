@@ -18,6 +18,10 @@ func FromError(err error) (Result, error) {
 	return nil, err
 }
 
+func FromErrorf(format string, a ...any) (Result, error) {
+	return nil, fmt.Errorf(format, a...)
+}
+
 func Nothing() (Result, error) {
 	return nil, nil
 }
