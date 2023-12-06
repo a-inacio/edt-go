@@ -22,7 +22,7 @@ type AllPromise struct {
 	err         []error
 }
 
-// All creates a new Promise of fulfillment one or more Actions.
+// All creates a new Promise for the complete fulfillment of one or more given Actions.
 func (p *Promise) All(actions ...action.Action) *AllPromise {
 	a := &AllPromise{
 		parent:      p,
@@ -49,36 +49,105 @@ func (a *AllPromise) Wait() *Promise {
 			return nil, a.parent.err
 		}
 
-		chainedCtx := context.WithValue(ctx, reflect.TypeOf(Promise{}).PkgPath(), a.parent.res)
+		completionCh, errCh := a.executeInParallel(ctx)
+		errorFound := false
 
-		for i, c := range a.cancellable {
-			// This is important to be made!
-			// otherwise the closure will capture the last values and not the value of c and i at the time of the iteration
-			cb := c
-			idx := i
-
-			go func() {
-				a.res[idx], a.err[idx] = cb.Do(chainedCtx)
-			}()
-		}
-
-		a.wg.Wait()
-
-		// Check for errors in the actions
-		for _, err := range a.err {
+		select {
+		case err := <-errCh:
 			if err != nil {
-				// If there are at least one error, return a multi error with all of them
-				// the operation bellow transforms a slice of errors into a multi error and ignores nil errors
-				return nil, errors.Join(a.err...)
+				errorFound = true
+			}
+		case <-completionCh:
+			if !errorFound {
+				return a.res, nil
 			}
 		}
 
-		// Otherwise return the results
-		return a.res, nil
+		// If we got here, it means that at leas one error was found
+		return nil, errors.Join(a.err...)
 	})
 
 	then.root = a.parent.root
 	a.parent.next = then
 
 	return then
+}
+
+// WaitWithBailout waits for all actions to complete, as soon as one of them fails the Promise fails and execution continues without waiting for the others.
+func (a *AllPromise) WaitWithBailout() *Promise {
+	then := Future(func(ctx context.Context) (action.Result, error) {
+		if a.parent.err != nil {
+			return nil, a.parent.err
+		}
+
+		completionCh, errCh := a.executeInParallel(ctx)
+
+		select {
+		case err := <-errCh:
+			return nil, err
+		case <-completionCh:
+			return a.res, nil
+		}
+	})
+
+	then.root = a.parent.root
+	a.parent.next = then
+
+	return then
+}
+
+// WaitWithCancel waits for all actions to complete, as soon as one of them fails the Promise fails, attempts to Cancel ongoing actions and execution continues.
+func (a *AllPromise) WaitWithCancel() *Promise {
+	then := Future(func(ctx context.Context) (action.Result, error) {
+		if a.parent.err != nil {
+			return nil, a.parent.err
+		}
+
+		completionCh, errCh := a.executeInParallel(ctx)
+
+		select {
+		case err := <-errCh:
+			for _, c := range a.cancellable {
+				c.Cancel()
+			}
+
+			return nil, err
+		case <-completionCh:
+			return a.res, nil
+		}
+	})
+
+	then.root = a.parent.root
+	a.parent.next = then
+
+	return then
+}
+
+func (a *AllPromise) executeInParallel(ctx context.Context) (completionCh chan any, errCh chan error) {
+	chainedCtx := context.WithValue(ctx, reflect.TypeOf(Promise{}).PkgPath(), a.parent.res)
+
+	completionCh = make(chan any, 1)
+	errCh = make(chan error, 1)
+
+	for i, c := range a.cancellable {
+		// This is important to be made!
+		// Otherwise, the closure will capture the last values and not the value of c and i at the time of the iteration
+		cb := c
+		idx := i
+
+		go func() {
+			a.res[idx], a.err[idx] = cb.Do(chainedCtx)
+			if a.err[idx] != nil {
+				errCh <- a.err[idx]
+			}
+		}()
+	}
+
+	go func() {
+		a.wg.Wait()
+		close(completionCh)
+		close(errCh)
+	}()
+
+	return completionCh, errCh
 }

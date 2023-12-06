@@ -69,3 +69,71 @@ func TestFutureAll(t *testing.T) {
 		t.Errorf("Should have not failed - %v", err)
 	}
 }
+
+func TestFutureAllWithBailout(t *testing.T) {
+	promise := Future(
+		func(ctx context.Context) (action.Result, error) {
+			return 10, nil
+		}).
+		All(
+			func(ctx context.Context) (action.Result, error) {
+				chained, _ := ChainedValueOf[int](ctx)
+				return *chained + 1, nil // 11
+			},
+			func(ctx context.Context) (action.Result, error) {
+				chained, _ := ChainedValueOf[int](ctx)
+				return *chained + 2, nil // 12
+			},
+		).
+		WaitWithBailout().
+		Then(func(ctx context.Context) (action.Result, error) {
+			chained, _ := ChainedSliceOf[int](ctx)     // [11, 12]
+			return 19 + *chained[0] + *chained[1], nil // 42 = 19 + 11 + 12
+		})
+
+	go promise.Do(nil)
+
+	res, err := ValueOf[int](promise)
+
+	if *res != 42 {
+		t.Errorf("Expected 42, got %v", res)
+	}
+
+	if err != nil {
+		t.Errorf("Should have not failed - %v", err)
+	}
+}
+
+func TestFutureAllWithCancel(t *testing.T) {
+	promise := Future(
+		func(ctx context.Context) (action.Result, error) {
+			return 10, nil
+		}).
+		All(
+			func(ctx context.Context) (action.Result, error) {
+				chained, _ := ChainedValueOf[int](ctx)
+				return *chained + 1, nil // 11
+			},
+			func(ctx context.Context) (action.Result, error) {
+				chained, _ := ChainedValueOf[int](ctx)
+				return *chained + 2, nil // 12
+			},
+		).
+		WaitWithCancel().
+		Then(func(ctx context.Context) (action.Result, error) {
+			chained, _ := ChainedSliceOf[int](ctx)     // [11, 12]
+			return 19 + *chained[0] + *chained[1], nil // 42 = 19 + 11 + 12
+		})
+
+	go promise.Do(nil)
+
+	res, err := ValueOf[int](promise)
+
+	if *res != 42 {
+		t.Errorf("Expected 42, got %v", res)
+	}
+
+	if err != nil {
+		t.Errorf("Should have not failed - %v", err)
+	}
+}
