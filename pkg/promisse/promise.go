@@ -72,8 +72,8 @@ func (p *Promise) Catch(a action.Action) *Promise {
 }
 
 // Finally chains an action, that will always be executed, regardless of any promise outcome.
-// If the finally action fails, nothing happens, the error is ignored.
-// There can only be one finally action, if this operation is repeated, only the last finally action will be executed.
+// If the action fails, nothing happens, the error is ignored.
+// There can only be one final action, if this operation is repeated, only the last action will be executed.
 func (p *Promise) Finally(a action.Action) *Promise {
 	p.root.finally = cancellable.
 		NewBuilder().
@@ -83,9 +83,9 @@ func (p *Promise) Finally(a action.Action) *Promise {
 	return p
 }
 
-// FromContext returns the chained value from the given context.
+// ChainedValueOf returns the chained value from the given context.
 // Beware that this method is only applicable within a chained action.
-func FromContext[T any](ctx context.Context) (*T, error) {
+func ChainedValueOf[T any](ctx context.Context) (*T, error) {
 	val := ctx.Value(reflect.TypeOf(Promise{}).PkgPath())
 
 	t := reflect.TypeOf((*T)(nil)).Elem()
@@ -99,35 +99,16 @@ func FromContext[T any](ctx context.Context) (*T, error) {
 	return &typedVal, nil
 }
 
-// SliceFromContext returns a chained slice of values from the given context.
+// ChainedSliceOf returns a chained slice of values from the given context.
 // Beware that this method is only applicable within a chained action.
-func SliceFromContext[T any](ctx context.Context) ([]T, error) {
-	res, err := FromContext[action.Result](ctx)
+func ChainedSliceOf[T any](ctx context.Context) ([]*T, error) {
+	res, err := ChainedValueOf[action.Result](ctx)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Cast the value to slice of action.Result
-	sliceOfResults, ok := (*res).([]action.Result)
-	if !ok {
-		return nil, fmt.Errorf("the promisse result %v is not a slice", res)
-	}
-
-	sliceRes := make([]T, len(sliceOfResults))
-
-	for i, r := range sliceOfResults {
-		// Cast the value to the desired type.
-		typedVal, ok := r.(T)
-		if !ok {
-			t := reflect.TypeOf((*T)(nil)).Elem()
-			key := t.String()
-			return nil, fmt.Errorf("the promisse result %v is not a slice of type %s", typedVal, key)
-		}
-		sliceRes[i] = typedVal
-	}
-
-	return sliceRes, nil
+	return action.SliceOf[T](*res)
 }
 
 // ValueOf resolves and returns the value of the promise as the given type, if the promise cannot be converted to the given type an error is returned.
@@ -144,50 +125,26 @@ func ValueOf[T any](a *Promise) (*T, error) {
 		return nil, a.root.err
 	}
 
-	// Cast the value to the desired type.
-	typedVal, ok := rootPromise.res.(T)
-	if !ok {
-		t := reflect.TypeOf((*T)(nil)).Elem()
-		key := t.String()
-		return nil, fmt.Errorf("the promisse result %s is not of type %T", key, typedVal)
-	}
-
-	return &typedVal, nil
+	return action.ValueOf[T](rootPromise.res)
 }
 
-func SliceOf[T any](a *Promise) ([]T, error) {
+// SliceOf resolves and returns the slice of values of the promise as the given type, if the promise cannot be converted to the given type an error is returned.
+// Resolving the promise is a blocking operation and will wait for all the promises to complete (or any to fail).
+// If a promise fails to execute, the actual error is returned.
+// Getting the value of a promise is an idempotent operation, it will always return the same value.
+func SliceOf[T any](a *Promise) ([]*T, error) {
 	res, err := ValueOf[action.Result](a)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Cast the value to slice of action.Result
-	sliceOfResults, ok := (*res).([]action.Result)
-	if !ok {
-		return nil, fmt.Errorf("the promisse result %v is not a slice", res)
-	}
-
-	sliceRes := make([]T, len(sliceOfResults))
-
-	for i, r := range sliceOfResults {
-		// Cast the value to the desired type.
-		typedVal, ok := r.(T)
-		if !ok {
-			t := reflect.TypeOf((*T)(nil)).Elem()
-			key := t.String()
-			return nil, fmt.Errorf("the promisse result %v is not a slice of type %s", typedVal, key)
-		}
-		sliceRes[i] = typedVal
-	}
-
-	return sliceRes, nil
-
+	return action.SliceOf[T](*res)
 }
 
-// Do is the entry point to execute the promise and return the outcome.
+// Do is the entry point to fulfil the promise and return the outcome.
 // Execution is cancelled if the context is cancelled
-// This operation can only be executed once, if you need to execute it multiple times, use the Future method to create a new promise.
+// This operation can only be executed once, if you need to execute it multiple times, a new promise must be created for each execution.
 // You can use the ValueOf method to get the value of the promise in an idempotent way or in a deferred manner.
 func (p *Promise) Do(ctx context.Context) (action.Result, error) {
 	p.root.mu.Lock()
@@ -204,7 +161,7 @@ func (p *Promise) Do(ctx context.Context) (action.Result, error) {
 	}
 
 	p.root.running = true
-	p.root.execute(ctx)
+	p.root.fulfilPromiseRecursively(ctx)
 
 	if p.root.finally != nil {
 		// Execute finally action
@@ -219,7 +176,7 @@ func (p *Promise) Do(ctx context.Context) (action.Result, error) {
 	return p.res, p.err
 }
 
-func (p *Promise) execute(ctx context.Context) {
+func (p *Promise) fulfilPromiseRecursively(ctx context.Context) {
 	p.res, p.err = p.cb.Do(ctx)
 
 	if p.err != nil {
@@ -239,7 +196,7 @@ func (p *Promise) execute(ctx context.Context) {
 	}
 
 	if p.next != nil {
-		p.next.execute(ctx)
+		p.next.fulfilPromiseRecursively(ctx)
 	} else {
 		p.root.res = p.res
 	}

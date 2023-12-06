@@ -23,9 +23,9 @@ func TestExecutor_ExecuteOne(t *testing.T) {
 	v3, _ := ex.Do(nil)
 	v4, _ := ex.Do(nil)
 
-	s1, _ := action.GetValue[string](v1)
-	i2, _ := action.GetValue[int](v2)
-	b3, _ := action.GetValue[bool](v3)
+	s1, _ := action.ValueOf[string](v1)
+	i2, _ := action.ValueOf[int](v2)
+	b3, _ := action.ValueOf[bool](v3)
 
 	if *s1 != "A" {
 		t.Errorf("expected A, got %v", s1)

@@ -48,7 +48,7 @@ func TestFutureChain(t *testing.T) {
 			return 20, nil
 		}).
 		Then(func(ctx context.Context) (action.Result, error) {
-			chained, _ := FromContext[int](ctx)
+			chained, _ := ChainedValueOf[int](ctx)
 			return *chained + 22, nil
 		})
 
@@ -120,7 +120,7 @@ func TestFutureChainWithErrorAndCatch(t *testing.T) {
 			return 21, nil
 		}).
 		Then(func(ctx context.Context) (action.Result, error) {
-			chained, _ := FromContext[int](ctx)
+			chained, _ := ChainedValueOf[int](ctx)
 			return *chained + 21, nil
 		}).
 		Finally(func(ctx context.Context) (action.Result, error) {

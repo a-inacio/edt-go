@@ -13,7 +13,7 @@ func TestFutureAllSimple(t *testing.T) {
 		}).
 		All(
 			func(ctx context.Context) (action.Result, error) {
-				chained, _ := FromContext[int](ctx)
+				chained, _ := ChainedValueOf[int](ctx)
 				return *chained + 22, nil
 			},
 		).
@@ -29,7 +29,7 @@ func TestFutureAllSimple(t *testing.T) {
 		if len(res) != 1 {
 			t.Errorf("Expected 1 element, got %v", len(res))
 		} else {
-			if res[0] != 42 {
+			if *res[0] != 42 {
 				t.Errorf("Expected 42, got %v", res[0])
 			}
 		}
@@ -43,18 +43,18 @@ func TestFutureAll(t *testing.T) {
 		}).
 		All(
 			func(ctx context.Context) (action.Result, error) {
-				chained, _ := FromContext[int](ctx)
+				chained, _ := ChainedValueOf[int](ctx)
 				return *chained + 1, nil // 11
 			},
 			func(ctx context.Context) (action.Result, error) {
-				chained, _ := FromContext[int](ctx)
+				chained, _ := ChainedValueOf[int](ctx)
 				return *chained + 2, nil // 12
 			},
 		).
 		Wait().
 		Then(func(ctx context.Context) (action.Result, error) {
-			chained, _ := SliceFromContext[int](ctx) // [11, 12]
-			return 19 + chained[0] + chained[1], nil // 42 = 19 + 11 + 12
+			chained, _ := ChainedSliceOf[int](ctx)     // [11, 12]
+			return 19 + *chained[0] + *chained[1], nil // 42 = 19 + 11 + 12
 		})
 
 	go promise.Do(nil)
